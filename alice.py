@@ -38,8 +38,6 @@ class product_template(osv.osv):
 		'margin_value': fields.float(string="Margin Value", readonly=True),
 	}
 
-	
-
 class product_category(osv.osv):
 	_inherit = 'product.category'
 	_columns = {

@@ -294,11 +294,13 @@ class account_invoice_line(osv.osv):
 			elif (discount_string_old < discount_string):
 				message_body += 'DISC UP From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
 
-			#if (price_unit_nett_old > price_unit_nett):
-			#	message_body += 'NETT DOWN From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'			
-			#elif (price_unit_nett_old < price_unit_nett):
-			#	message_body += 'NETT UP From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'		
-
+			if (price_unit_nett_old > price_unit_nett):
+				message_body += 'NETT DOWN From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'			
+			elif (price_unit_nett_old < price_unit_nett):
+				message_body += 'NETT UP From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'	
+			else:
+				message_body += 'NETT : '+ str("{:,.0f}".format(price_unit_nett_old)) +'\n'	
+				
 			account_invoice_obj = self.pool.get('account.invoice')
 			account_invoice = account_invoice_obj.browse(cr, uid, vals['invoice_id'])
 			supplier_name = account_invoice.partner_id.display_name
