@@ -250,6 +250,9 @@ class product_category(osv.osv):
 
 	def write(self, cr, uid, ids, data, context=None):
 		result = super(product_category, self).write(cr, uid, ids, data, context)
+		sale_notification = data['sale_notification'] if 'sale_notification' in data else False
+		purchase_notification = data['purchase_notification'] if 'purchase_notification' in data else False
+
 		for category_id in ids:
 			product_obj = self.pool.get('product.template')
 			product_ids = product_obj.search(cr, uid, [
@@ -257,11 +260,11 @@ class product_category(osv.osv):
 			])
 			#if data.get('sale_notification', False):
 			product_obj.write(cr, uid, product_ids, {
-				'sale_notification': data['sale_notification'],
+				'sale_notification': sale_notification,
 			})
 			#if data.get('purchase_notification', False):
 			product_obj.write(cr, uid, product_ids, {
-				'purchase_notification': data['purchase_notification'],
+				'purchase_notification': purchase_notification,
 			})
 		return result
 
