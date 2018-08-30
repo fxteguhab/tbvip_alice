@@ -13,11 +13,9 @@
 	],	
 	'sequence': 200,
 	'data': [
+	'menu/stock_opname_menu.xml',
 	'views/notification_view.xml',
-	],
-	'demo': [
-	],
-	'test': [
+	'views/stock_opname_view.xml',
 	],
 	'installable': True,
 	'auto_install': False,

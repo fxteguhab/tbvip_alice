@@ -78,8 +78,8 @@ class account_invoice_line(osv.osv):
 			wuid = alice[0]
 
 			account_invoice_obj = self.pool.get('account.invoice')
-			message="ALICE : I'm changing %s purchase price" % (name)	
-			account_invoice_obj.message_post(cr, uid, invoice_id, body=message)	
+			message="ALICE : I'm changing %s purchase price to %s" % (name,price_unit_nett)	
+			account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)	
 
 			product_current_price_obj = self.pool.get('product.current.price')
 			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
