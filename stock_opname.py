@@ -24,7 +24,7 @@ class stock_opname_memory(osv.osv_memory):
 		return super(stock_opname_memory, self).action_generate_stock_opname(cr, uid, ids, context=context)
 	
 	def _generate_stock_opname_products(self, cr, uid, location,context={}):
-		return self.algoritma_generate_so_products2(cr, uid, location,context=context)
+		return self.algoritma_generate_so_products3(cr, uid, location,context=context)
 
 	def algoritma_generate_so_products1(self, cr, uid, location,context={}):
 		today = datetime.now()
@@ -107,7 +107,40 @@ class stock_opname_memory(osv.osv_memory):
 		return stock_opname_products
 
 
-	#def algoritma_generate_so_products3, dst sesuai perkembangan berikutnya
+	def algoritma_generate_so_products3(self, cr, uid, location,context={}):
+		today = datetime.now()
+		last_week = today - timedelta(days=7)
+		last_month = today - timedelta(days=30)	
+		cr.execute("""				
+			SELECT
+				product_id, last_sale_date
+			FROM (
+				SELECT DISTINCT ON (product_id)
+				so_line.product_id, so_line.write_date as last_sale_date
+				FROM
+					sale_order_line so_line
+				WHERE
+					so_line.product_id NOT IN (
+						SELECT
+							si_line.product_id
+						FROM
+							stock_inventory_line as si_line
+						WHERE	
+							location_id = \'{}\' AND
+							(write_date is NULL OR write_date > \'{}\')
+					) AND so_line.stock_location_id = \'{}\'
+					  AND so_line.write_date < \'{}\' 
+					  AND so_line.write_date > \'{}\'	
+				) AS product_last_sale_date	  
+				ORDER BY
+					last_sale_date ASC
+			""".format(location, last_week, location, today, last_month)
+		)
+		stock_opname_products = []
+		for row in cr.dictfetchall():
+			stock_opname_products.append({'product_id': row['product_id']})
+		
+		return stock_opname_products
 
 	def action_load_inventories(self, cr, uid, ids, context=None):
 		stock_opname_memory_line_obj = self.pool.get('stock.opname.memory.line')
