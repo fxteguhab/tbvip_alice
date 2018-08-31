@@ -323,4 +323,27 @@ class account_invoice_line(osv.osv):
 			return result
 
 
-	
+class tbvip_bon_book(osv.osv):
+	_inherit = "tbvip.bon.book"
+
+	def create(self, cr, uid, vals, context=None):
+		result = super(tbvip_bon_book, self).create(cr, uid, vals, context)
+		residual = 	self._cek_last_book_residual(cr,uid,vals['employee_id'])
+		employee_obj = self.pool.get('hr.employee')
+		employee_name = employee_obj.browse(cr,uid,vals['employee_id']).name
+
+		if (residual>3):
+			message_body = ''	
+			message_title = 'BON RESIDUAL ('+str(employee_name)+')::'+str(residual)+' lbr'
+			alert = '!'
+			for alert_lv in range(residual):
+				alert += '!'
+
+			context = {
+				'category':'SALES',
+				'sound_idx':PURCHASE_SOUND_IDX,
+				'alert' : alert,
+				}
+
+			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+		return result
