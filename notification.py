@@ -347,3 +347,31 @@ class tbvip_bon_book(osv.osv):
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		return result
+
+class stock_inventory(osv.osv):
+	_inherit = 'stock.inventory'
+
+	def action_done(self, cr, uid, ids, context=None):
+		result = super(stock_inventory, self).action_done(cr, uid, ids, context=context)
+		for inventory in self.browse(cr, uid, ids, context=context):
+			row_total_qty = 0
+			for line in inventory.line_ids:
+				row_total_qty += line.product_qty
+				delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
+				precentage = (delta_old_and_new_total_qty_line/line.theoretical_qty) * 100
+				# checking penalty
+				if precentage > 0:		
+					message_title = 'SO('+str(line.product_id.name_template)+')::'+str(delta_old_and_new_total_qty_line)		
+					message_body = 'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.login)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)+'\n'+'LOCATION:'+str(inventory.location_id.name)
+					#line_str = 'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)+'\n'+'LOCATION:'+str(inventory.location_id.name)
+					alert = ''
+					for alert_lv in range(int(precentage/10)):
+						alert += '!'
+					context = {
+						'category':'PRODUCT',
+						'sound_idx':PRODUCT_SOUND_IDX,
+						'alert' : alert,
+						#'lines' : line_str,
+						}
+					self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+		return result
