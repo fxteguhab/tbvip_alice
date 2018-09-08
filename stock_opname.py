@@ -155,6 +155,7 @@ class stock_opname_memory(osv.osv_memory):
 						'inject_id': line['inject_id'] if line.get('inject_id', False) else 0,
 						'location_id': line['location_id'],
 						'product_id': line['product_id'].id,
+						'inject_by': line['inject_id.create_uid.partner_id.name'] if line.get('inject_id.create_uid.partner_id.name', False) else 0,
 					}))
 				self.write(cr, uid, so_memory.id, {
 					'line_ids': new_line_ids,
@@ -192,10 +193,41 @@ class stock_opname_memory_line(osv.osv_memory):
 				sublocation_full_name = product_sublocation_id.sublocation_id.full_name if product_sublocation_id.sublocation_id.full_name else ''
 				result += branch_name + ' / ' + sublocation_full_name + '\r\n'
 		return {'value': {'sublocation': result}}
-
+'''
 class stock_opname_inject(osv.osv):
 	_inherit = 'stock.opname.inject'
 	
 	_defaults = {
 		'location_id': lambda self, cr, uid, ctx: self.pool.get('res.users').browse(cr, uid, uid, ctx).branch_id.default_stock_location_id.id,
 	}
+'''
+
+
+class stock_inventory(osv.osv):
+	_inherit = 'stock.inventory'
+
+	def action_done(self, cr, uid, ids, context=None):
+		result = super(stock_inventory, self).action_done(cr, uid, ids, context=context)
+		user_obj = self.pool.get('res.users')
+		domain = [
+				('name', '=', 'ALICE'),
+			]
+		alice = user_obj.search(cr, uid, domain)
+		wuid = alice[0]
+		stock_opname_inject = self.pool.get('stock.opname.inject')
+
+		for inventory in self.browse(cr, uid, ids, context=context):
+			for line in inventory.line_ids:
+				delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
+				percentage = (delta_old_and_new_total_qty_line/line.theoretical_qty) * 100
+				# create SO inject
+				if percentage > 10:
+					stock_opname_inject.create(cr,wuid, {
+						'location_id': inventory.location_id.id,
+						'product_id': line.product_id.id,
+						'priority': 1,
+						'active': True,
+						'domain':'not',
+						'employee_id': inventory.employee_id.id,
+					})
+		return result
