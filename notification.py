@@ -358,7 +358,8 @@ class stock_inventory(osv.osv):
 			for line in inventory.line_ids:
 				row_total_qty += line.product_qty
 				delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
-				precentage = (delta_old_and_new_total_qty_line/line.theoretical_qty) * 100
+				old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
+				precentage = (delta_old_and_new_total_qty_line/old_qty) * 100
 				# checking penalty
 				if precentage > 0:		
 					message_title = 'SO('+str(line.product_id.name_template)+')::'+str(delta_old_and_new_total_qty_line)		

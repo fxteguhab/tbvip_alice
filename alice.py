@@ -130,7 +130,8 @@ class stock_inventory(osv.osv):
 		for inventory in self.browse(cr, uid, ids, context=context):
 			for line in inventory.line_ids:
 				delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
-				percentage = (delta_old_and_new_total_qty_line/line.theoretical_qty) * 100
+				old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
+				percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
 				# create SO inject
 				if percentage > 10:
 					stock_opname_inject.create(cr,wuid, {
