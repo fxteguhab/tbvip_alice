@@ -117,6 +117,7 @@ class account_invoice_line(osv.osv):
 class stock_inventory(osv.osv):
 	_inherit = 'stock.inventory'
 
+	#nambahin SO inject by ALICE
 	def action_done(self, cr, uid, ids, context=None):
 		result = super(stock_inventory, self).action_done(cr, uid, ids, context=context)
 		user_obj = self.pool.get('res.users')

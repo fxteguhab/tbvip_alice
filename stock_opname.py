@@ -155,7 +155,7 @@ class stock_opname_memory(osv.osv_memory):
 						'inject_id': line['inject_id'] if line.get('inject_id', False) else 0,
 						'location_id': line['location_id'],
 						'product_id': line['product_id'].id,
-						'inject_by': line['inject_id.create_uid.partner_id.name'] if line.get('inject_id.create_uid.partner_id.name', False) else 0,
+						#'inject_by': line['inject_id.create_uid.partner_id.name'] if line.get('inject_id.create_uid.partner_id.name', False) else 0,
 					}))
 				self.write(cr, uid, so_memory.id, {
 					'line_ids': new_line_ids,

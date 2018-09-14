@@ -357,13 +357,14 @@ class stock_inventory(osv.osv):
 			row_total_qty = 0
 			for line in inventory.line_ids:
 				row_total_qty += line.product_qty
-				delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
+				selisih =  line.product_qty - line.theoretical_qty
+				delta_old_and_new_total_qty_line = abs(selisih)
 				old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
 				precentage = (delta_old_and_new_total_qty_line/old_qty) * 100
 				# checking penalty
-				if precentage > 0:		
-					message_title = 'SO('+str(line.product_id.name_template)+')::'+str(delta_old_and_new_total_qty_line)		
-					message_body = 'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)+'\n'+'LOCATION:'+str(inventory.location_id.name)
+				if precentage > 10:		
+					message_title = 'SO('+str(line.product_id.name_template)+')::'+str(inventory.location_id.name)	
+					message_body = 'DELTA:'+str(selisih)+'('+str(precentage)+'%)'+'\n'+'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)
 					#line_str = 'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)+'\n'+'LOCATION:'+str(inventory.location_id.name)
 					alert = ''
 					for alert_lv in range(int(precentage/10)):
