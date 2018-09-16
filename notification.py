@@ -1,3 +1,4 @@
+from openerp import SUPERUSER_ID
 from openerp.osv import osv, fields
 from datetime import datetime
 from datetime import timedelta
@@ -268,7 +269,7 @@ class product_category(osv.osv):
 			})
 		return result
 
-
+'''
 class account_invoice_line(osv.osv):
 	_inherit = 'account.invoice.line'
 
@@ -292,7 +293,7 @@ class account_invoice_line(osv.osv):
 
 		message_body = ''
 		line_str = ''
-
+		# cek perubahan harga beli
 		if (price_unit_nett_old > 0) and (price_unit > 0) and (round(price_unit_nett_old) != round(price_unit_nett)):
 			if round(price_unit_old) != round(price_unit):
 				message_body += 'PLIST From '+ str("{:,.0f}".format(price_unit_old))+' to '+str("{:,.0f}".format(price_unit)) +'\n'
@@ -301,10 +302,6 @@ class account_invoice_line(osv.osv):
 
 			line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'	
 			message_body += line_str
-
-			#account_invoice_obj = self.pool.get('account.invoice')
-			#account_invoice = account_invoice_obj.browse(cr, uid, invoice_id)
-			#supplier_name = account_invoice.partner_id.display_name
 
 			line_str += 'SELL PRICE:'+str("{:,.0f}".format(sell_price_unit)) +'\n'+'Supplier:'+partner_name
 			message_body += line_str
@@ -320,8 +317,31 @@ class account_invoice_line(osv.osv):
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
-			return result
+		#cek margin	###################### 
+		margin = sell_price_unit - price_unit_nett
+		old_margin = sell_price_unit - price_unit_nett_old
+		percentage = (margin/sell_price_unit) * 100
+		#ga ada margin bahkan jual rugi, force new sell price
+		if (margin <= 0) or (percentage < 1):
+			#cek margin lama
+			old_percentage = (old_margin/sell_price_unit) * 100 
+			if (old_percentage >= 2):
+				new_sell_price_unit = price_unit_nett + old_margin 	#mesti di round menuju 500 rupiah terdekat
+			else:
+				new_sell_price_unit = price_unit_nett + (price_unit_nett * 2 / 100)
 
+			message_title = str(name)	
+			message_body = "SELL FROM:"+str("{:,.0f}".format(sell_price_unit))+' TO '+str("{:,.0f}".format(new_sell_price_unit)) + '\n'+'BY:ALICE'
+			context = {
+				'category':'INVOICE',
+				'sound_idx':PURCHASE_SOUND_IDX,
+				'alert' : '!!!!!!!',
+				}
+
+			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+
+		return result
+'''
 
 class tbvip_bon_book(osv.osv):
 	_inherit = "tbvip.bon.book"
@@ -377,3 +397,102 @@ class stock_inventory(osv.osv):
 						}
 					self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		return result
+
+class product_current_price(osv.osv):
+	_inherit = 'product.current.price'
+
+	def create(self, cr, uid, vals, context={}):
+		new_id = super(product_current_price, self).create(cr, uid, vals, context)
+		if (uid != SUPERUSER_ID):	
+			for prices in self.browse(cr, uid, new_id, context=context):
+				product_id = prices.product_id
+				tipe = prices.price_type_id
+				create_id = prices.create_uid
+				partner_id = prices.partner_id
+				price_unit_nett = prices.nett_1
+				price_unit = prices.price_1
+				discount_string = prices.disc_1
+				product_uom = prices.uom_id_1
+
+
+			product_current_price_obj = self.pool.get('product.current.price')
+			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
+			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
+			buy_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','buy'),('is_default','=',True),])[0]
+			general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]
+			message_body = ''
+			line_str = ''
+
+			#GET OLD PRICE
+			domain = [
+				('price_type_id', '=', buy_price_type_id),
+				('product_id', '=', product_id.id),
+				('start_date','<=',now),
+			]
+			current_price_buy_ids = product_current_price_obj.search(cr, uid, domain, order='start_date DESC', limit=2)
+			domain = [
+				('price_type_id', '=', sell_price_type_id),
+				('product_id', '=', product_id.id),
+				('start_date','<=',now),
+				('partner_id','=',general_customer_id),
+			]
+			current_price_sell_ids = product_current_price_obj.search(cr, uid, domain, order='start_date DESC', limit=2)
+
+			if (len(current_price_buy_ids) > 1): 	
+				for product_current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[1],context=context):
+					price_unit_nett_buy_old = product_current_price_buy_ids.nett_1
+					price_unit_buy_old = product_current_price_buy_ids.price_1
+					discount_string_buy_old = product_current_price_buy_ids.disc_1
+					partner_buy_old = product_current_price_buy_ids.partner_id
+			else:
+				price_unit_nett_buy_old = 0
+				price_unit_buy_old = 0
+				discount_string_buy_old = '0'
+				partner_buy_old = 0
+
+			if (len(current_price_sell_ids) > 1):
+				for product_current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[1],context=context):
+					price_unit_nett_sell_old = product_current_price_sell_ids.nett_1
+					price_unit_sell_old = product_current_price_sell_ids.price_1
+					discount_string_sell_old = product_current_price_sell_ids.disc_1
+			else:
+				price_unit_nett_sell_old = 0
+				price_unit_sell_old = 0
+				discount_string_sell_old = '0'
+
+			for current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[0],context=context):
+				price_unit_nett_last_buy = current_price_buy_ids.nett_1
+			for current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[0],context=context):
+				price_unit_nett_last_sell = current_price_sell_ids.nett_1
+
+			if (tipe.type == 'sell'):
+				message_title = 'NEW SELL$:'+str(product_id.name_template)					
+				if round(price_unit_sell_old) != round(price_unit):
+					message_body += 'PLIST From '+ str("{:,.0f}".format(price_unit_sell_old))+' to '+str("{:,.0f}".format(price_unit)) +'\n'
+				if discount_string_sell_old != discount_string:
+					message_body += 'DISC From '+ str(discount_string_sell_old)+' to '+ str(discount_string) +'\n'
+				line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_sell_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'	
+				line_str += 'BUY PRICE:'+str("{:,.0f}".format(price_unit_nett_last_buy)) +'\n'+'Supplier:'+partner_buy_old.name
+				message_body += line_str
+				
+			if (tipe.type == 'buy'):
+				message_title = 'NEW BUY$:'+str(product_id.name_template)					
+				if round(price_unit_buy_old) != round(price_unit):
+					message_body += 'PLIST From '+ str("{:,.0f}".format(price_unit_buy_old))+' to '+str("{:,.0f}".format(price_unit)) +'\n'
+				if discount_string_buy_old != discount_string:
+					message_body += 'DISC From '+ str(discount_string_buy_old)+' to '+ str(discount_string) +'\n'
+				line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_buy_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'	
+				line_str += 'SELL PRICE:'+str("{:,.0f}".format(price_unit_nett_last_sell))
+				message_body += line_str
+
+			message_body += 'Created by :' +str(create_id.name)
+			context = {
+					'category':'PRODUCT',
+					'sound_idx':PRODUCT_SOUND_IDX,
+					'alert' : '!!!!!!!',
+					'lines' : line_str,
+					}
+			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+
+		return new_id
+

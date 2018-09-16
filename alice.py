@@ -68,29 +68,75 @@ class account_invoice_line(osv.osv):
 		sell_price_unit = context.get('sell_price_unit',0)
 		partner_id = context.get('partner_id','')
 
-		#force create new price ##################################################################################################	
-		if (price_unit_nett_old > 0) and (price_unit > 0) and (round(price_unit_nett_old) != round(price_unit_nett)):
-			user_obj = self.pool.get('res.users')
-			domain = [
-					('name', '=', 'ALICE'),
-				]
-			alice = user_obj.search(cr, uid, domain)
-			wuid = alice[0]
+		account_invoice_obj = self.pool.get('account.invoice')
+		product_current_price_obj = self.pool.get('product.current.price')
+		now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
 
-			account_invoice_obj = self.pool.get('account.invoice')
+		user_obj = self.pool.get('res.users')
+		domain = [
+				('name', '=', 'ALICE'),
+			]
+		alice = user_obj.search(cr, uid, domain)
+		wuid = alice[0]
+
+		#force create new buy price ##################################################################################################	
+		if (price_unit_nett_old > 0) and (price_unit > 0) and (round(price_unit_nett_old) != round(price_unit_nett)):
+			
 			message="ALICE : I'm changing %s purchase price to %s" % (name,price_unit_nett)	
 			account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)	
+	
+			#Create new current buy price
+			product_current_price_obj.create(cr, wuid, {
+			'price_type_id': price_type_id,
+			'product_id': product_id,
+			'start_date': now,
+			'partner_id': partner_id,
+			'uom_id_1': product_uom,
+			'price_1': price_unit,
+			'disc_1' : discount_string,	
+			})	
 
-			product_current_price_obj = self.pool.get('product.current.price')
-			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
+		#cek margin	###################### 
+		margin = sell_price_unit - price_unit_nett
+		old_margin = sell_price_unit - price_unit_nett_old
+		percentage = (margin/sell_price_unit) * 100
+		#ga ada margin bahkan jual rugi, force new sell price
+		if (margin <= 0) or (percentage < 1):
+			#cek margin lama
+			old_percentage = (old_margin/sell_price_unit) * 100 
+			if (old_percentage >= 2):
+				new_sell_price_unit = price_unit_nett + old_margin 	#mesti di round menuju 500 rupiah terdekat
+			else:
+				new_sell_price_unit = price_unit_nett + (price_unit_nett * 3 / 100) #harga beli + 3%
+
+
+			message="ALICE : I'm changing %s sell price to %s" % (name,new_sell_price_unit)	
+			account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)
+
+
+			#Create new current sell price
+			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
+			general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]			
+			product_current_price_obj.create(cr, wuid, {
+			'price_type_id': sell_price_type_id,
+			'product_id': product_id,
+			'start_date': now,
+			'partner_id': general_customer_id,
+			'uom_id_1': product_uom,
+			'price_1': new_sell_price_unit,	
+			})	
+
+		return result
+
+		''' 		
 			domain = [
-				('price_type_id', '=', price_type_id),
+				('price_type_id', '=', sell_price_type_id),
 				('product_id', '=', product_id),
 				('start_date','<=',now),
-				('partner_id','=',partner_id),
+				('partner_id','=',general_customer_id),
 			]
-			
 			product_current_price_ids = product_current_price_obj.search(cr, uid, domain, order='start_date DESC', limit=1)
+			
 			if len(product_current_price_ids) == 0:
 				#Create new price list
 				product_current_price_obj.create(cr, wuid, {
@@ -112,7 +158,8 @@ class account_invoice_line(osv.osv):
 				'start_date': now,
 				'partner_id' : partner_id,
 			})
-				############################################################################################################################
+		'''
+		############################################################################################################################
 
 class stock_inventory(osv.osv):
 	_inherit = 'stock.inventory'
