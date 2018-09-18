@@ -70,6 +70,8 @@ class account_invoice_line(osv.osv):
 		sell_price_unit_nett_old = 0
 		margin = 0
 		old_margin = 0
+		percentage = 0
+		old_percentage = 0
 
 		#print "invoice_type:"+str(invoice_type)
 		#print "invoice_id:"+str(invoice_id)
@@ -85,8 +87,7 @@ class account_invoice_line(osv.osv):
 			percentage = (margin/sell_price_unit_nett) * 100
 			old_percentage = (old_margin/sell_price_unit_nett) * 100 
 
-		else: #sell
-			#print "sell"
+		elif invoice_type == 'out_invoice': #sell
 			sell_price_unit_nett = context.get('price_unit_nett',0)
 			sell_price_unit_nett_old = context.get('price_unit_nett_old',0)
 			sell_price_unit = context.get('price_unit',0)
@@ -136,7 +137,7 @@ class account_invoice_line(osv.osv):
 			})	
 		
 		#ga ada margin bahkan jual rugi, force new sell price
-		if (margin <= 0) or (percentage < 1):
+		if ((invoice_type == 'in_invoice') or (invoice_type == 'out_invoice')) and (margin <= 0) or (percentage < 1):
 			#cek margin lama
 			if (old_percentage >= 2):
 				new_sell_price_unit = buy_price_unit_nett + old_margin 	#mesti di round menuju 500 rupiah terdekat
@@ -145,7 +146,7 @@ class account_invoice_line(osv.osv):
 
 			message="ALICE : I'm changing %s sell price to %s" % (name,new_sell_price_unit)	
 			account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)
-			
+			#print "new_sell_price_unit:"+str(new_sell_price_unit)
 			#Create new current sell price
 			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
 			general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]			

@@ -439,6 +439,15 @@ class product_current_price(osv.osv):
 			]
 			current_price_sell_ids = product_current_price_obj.search(cr, uid, domain, order='start_date DESC', limit=2)
 			partner_name = ''
+			price_unit_nett_last_buy = 0
+			price_unit_nett_buy_old = 0
+			price_unit_buy_old = 0
+			discount_string_buy_old = '0'
+			price_unit_nett_last_sell = 0
+			price_unit_nett_sell_old = 0
+			price_unit_sell_old = 0
+			discount_string_sell_old = '0'
+
 			if (len(current_price_buy_ids) > 0): 	
 				for current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[0],context=context):
 					price_unit_nett_last_buy = current_price_buy_ids.nett_1
@@ -448,10 +457,10 @@ class product_current_price(osv.osv):
 						price_unit_buy_old = product_current_price_buy_ids.price_1
 						discount_string_buy_old = product_current_price_buy_ids.disc_1
 						partner_name = product_current_price_buy_ids.partner_id.name
-				else:
-					price_unit_nett_buy_old = 0
-					price_unit_buy_old = 0
-					discount_string_buy_old = '0'
+				#else:
+				#	price_unit_nett_buy_old = 0
+				#	price_unit_buy_old = 0
+				#	discount_string_buy_old = '0'
 
 			if (len(current_price_sell_ids) > 0):
 				for current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[0],context=context):
@@ -461,10 +470,10 @@ class product_current_price(osv.osv):
 						price_unit_nett_sell_old = product_current_price_sell_ids.nett_1
 						price_unit_sell_old = product_current_price_sell_ids.price_1
 						discount_string_sell_old = product_current_price_sell_ids.disc_1		
-				else:
-					price_unit_nett_sell_old = 0
-					price_unit_sell_old = 0
-					discount_string_sell_old = '0'
+				#else:
+				#	price_unit_nett_sell_old = 0
+				#	price_unit_sell_old = 0
+				#	discount_string_sell_old = '0'
 		
 			if (tipe.type == 'sell'):
 				message_title = 'NEW SELL$:'+str(product_id.name_template)					
