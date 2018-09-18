@@ -348,13 +348,14 @@ class tbvip_bon_book(osv.osv):
 
 	def create(self, cr, uid, vals, context=None):
 		result = super(tbvip_bon_book, self).create(cr, uid, vals, context)
-		residual = 	self._cek_last_book_residual(cr,uid,vals['employee_id'])
+		residual = 	self._cek_last_book_residual(cr,uid,vals['employee_id'],vals['branch_id'])
 		employee_obj = self.pool.get('hr.employee')
+		branch_obj = self.pool.get('tbvip.branch')
 		employee_name = employee_obj.browse(cr,uid,vals['employee_id']).name
-
+		branch_name = branch_obj.browse(cr,uid,vals['branch_id']).name
 		if (residual>3):
 			message_body = ''	
-			message_title = 'BON RESIDUAL ('+str(employee_name)+')::'+str(residual)+' lbr'
+			message_title = 'BON ('+str(employee_name)+'-'+str(branch_name)+')::'+str(residual)+' lbr'
 			alert = '!'
 			for alert_lv in range(residual):
 				alert += '!'
@@ -437,34 +438,34 @@ class product_current_price(osv.osv):
 				('partner_id','=',general_customer_id),
 			]
 			current_price_sell_ids = product_current_price_obj.search(cr, uid, domain, order='start_date DESC', limit=2)
+			partner_name = ''
+			if (len(current_price_buy_ids) > 0): 	
+				for current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[0],context=context):
+					price_unit_nett_last_buy = current_price_buy_ids.nett_1
+				if (len(current_price_buy_ids) > 1): 
+					for product_current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[1],context=context):
+						price_unit_nett_buy_old = product_current_price_buy_ids.nett_1
+						price_unit_buy_old = product_current_price_buy_ids.price_1
+						discount_string_buy_old = product_current_price_buy_ids.disc_1
+						partner_name = product_current_price_buy_ids.partner_id.name
+				else:
+					price_unit_nett_buy_old = 0
+					price_unit_buy_old = 0
+					discount_string_buy_old = '0'
 
-			if (len(current_price_buy_ids) > 1): 	
-				for product_current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[1],context=context):
-					price_unit_nett_buy_old = product_current_price_buy_ids.nett_1
-					price_unit_buy_old = product_current_price_buy_ids.price_1
-					discount_string_buy_old = product_current_price_buy_ids.disc_1
-					partner_buy_old = product_current_price_buy_ids.partner_id
-			else:
-				price_unit_nett_buy_old = 0
-				price_unit_buy_old = 0
-				discount_string_buy_old = '0'
-				partner_buy_old = 0
-
-			if (len(current_price_sell_ids) > 1):
-				for product_current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[1],context=context):
-					price_unit_nett_sell_old = product_current_price_sell_ids.nett_1
-					price_unit_sell_old = product_current_price_sell_ids.price_1
-					discount_string_sell_old = product_current_price_sell_ids.disc_1
-			else:
-				price_unit_nett_sell_old = 0
-				price_unit_sell_old = 0
-				discount_string_sell_old = '0'
-
-			for current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[0],context=context):
-				price_unit_nett_last_buy = current_price_buy_ids.nett_1
-			for current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[0],context=context):
-				price_unit_nett_last_sell = current_price_sell_ids.nett_1
-
+			if (len(current_price_sell_ids) > 0):
+				for current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[0],context=context):
+					price_unit_nett_last_sell = current_price_sell_ids.nett_1
+				if (len(current_price_sell_ids) > 1):
+					for product_current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[1],context=context):
+						price_unit_nett_sell_old = product_current_price_sell_ids.nett_1
+						price_unit_sell_old = product_current_price_sell_ids.price_1
+						discount_string_sell_old = product_current_price_sell_ids.disc_1		
+				else:
+					price_unit_nett_sell_old = 0
+					price_unit_sell_old = 0
+					discount_string_sell_old = '0'
+		
 			if (tipe.type == 'sell'):
 				message_title = 'NEW SELL$:'+str(product_id.name_template)					
 				if round(price_unit_sell_old) != round(price_unit):
@@ -472,7 +473,7 @@ class product_current_price(osv.osv):
 				if discount_string_sell_old != discount_string:
 					message_body += 'DISC From '+ str(discount_string_sell_old)+' to '+ str(discount_string) +'\n'
 				line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_sell_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'	
-				line_str += 'BUY PRICE:'+str("{:,.0f}".format(price_unit_nett_last_buy)) +'\n'+'Supplier:'+partner_buy_old.name
+				line_str += 'BUY PRICE:'+str("{:,.0f}".format(price_unit_nett_last_buy)) +'\n'+'Supplier:'+partner_name
 				message_body += line_str
 				
 			if (tipe.type == 'buy'):
