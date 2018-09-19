@@ -137,7 +137,7 @@ class account_invoice_line(osv.osv):
 			})	
 		
 		#ga ada margin bahkan jual rugi, force new sell price
-		if ((invoice_type == 'in_invoice') or (invoice_type == 'out_invoice')) and (margin <= 0) or (percentage < 1):
+		if ((invoice_type == 'in_invoice') or (invoice_type == 'out_invoice')) and (sell_price_unit_nett > 0) and ((margin < 0) or (percentage < 1)):
 			#cek margin lama
 			if (old_percentage >= 2):
 				new_sell_price_unit = buy_price_unit_nett + old_margin 	#mesti di round menuju 500 rupiah terdekat
