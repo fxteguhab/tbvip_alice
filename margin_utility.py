@@ -1,15 +1,12 @@
 import re
 
-
-
 from openerp.tools.translate import _
-
 
 class InvalidMarginException(Exception):
 	pass
 
 
-def validate_Margin_string(Margin_string, price, max_Margin):
+def validate_margin_string(Margin_string, price, max_Margin):
 # If Margin_string is empty, return it as valid
 	if not Margin_string:
 		return ''
@@ -25,7 +22,7 @@ def validate_Margin_string(Margin_string, price, max_Margin):
 		raise InvalidMarginException(_("Margin limit exceeded: %s, maximum: %s.") % (len(Margins),max_Margin))
 	for Margin in Margins:
 		if "%" in Margin:
-			if margin.index("%") != len(Margin) - 1:  # there's something between % and +
+			if Margin.index("%") != len(Margin) - 1:  # there's something between % and +
 				raise InvalidmarginException(_("Invalid percentage format: %s") % Margin)
 			try:
 				number = float(Margin[:-1])
@@ -45,31 +42,29 @@ def validate_Margin_string(Margin_string, price, max_Margin):
 	return Margin_string_nospace  # valid
 
 
-def calculate_Margin(Margin_string, price, max_Margin):
+def calculate_margin(Margin_string, price, max_Margin):
 	result = [0, 0, 0, 0, 0, 0, 0, 0]
 	if not Margin_string:
 		return result
 	Margins = Margin_string.split("+")
 	counter = max_Margin
-	#print Margins
-	for Margin in Margins:
-		value = 0
-		if not counter:
-			break
-		if "%" in Margin:
-			try:
-				#print float(Margin[:-1])
-				#print price
-				value = (price * (float(Margin[:-1]) / 100))
-			except:
-				raise InvalidMarginException(_("Margin format mismatch: %s") % Margin_string)
-		else:
-			if len(Margin) > 0:
+	if price > 0:
+		for Margin in Margins:
+			value = 0
+			if not counter:
+				break
+			if "%" in Margin:
 				try:
-					value = float(Margin)
+					value = (price * (float(Margin[:-1]) / 100))
 				except:
 					raise InvalidMarginException(_("Margin format mismatch: %s") % Margin_string)
-		price -= value
-		result[len(result) - counter] = value
-		counter -= 1
+			else:
+				if len(Margin) > 0:
+					try:
+						value = float(Margin)
+					except:
+						raise InvalidMarginException(_("Margin format mismatch: %s") % Margin_string)
+			price -= value
+			result[len(result) - counter] = value
+			counter -= 1
 	return result

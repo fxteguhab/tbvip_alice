@@ -262,11 +262,12 @@ class product_category(osv.osv):
 			#if data.get('sale_notification', False):
 			product_obj.write(cr, uid, product_ids, {
 				'sale_notification': sale_notification,
-			})
-			#if data.get('purchase_notification', False):
-			product_obj.write(cr, uid, product_ids, {
 				'purchase_notification': purchase_notification,
 			})
+			#if data.get('purchase_notification', False):
+			#product_obj.write(cr, uid, product_ids, {
+			#	'purchase_notification': purchase_notification,
+			#})
 		return result
 
 '''
@@ -438,6 +439,7 @@ class product_current_price(osv.osv):
 				('partner_id','=',general_customer_id),
 			]
 			current_price_sell_ids = product_current_price_obj.search(cr, uid, domain, order='start_date DESC', limit=2)
+			
 			partner_name = ''
 			price_unit_nett_last_buy = 0
 			price_unit_nett_buy_old = 0
@@ -449,31 +451,24 @@ class product_current_price(osv.osv):
 			discount_string_sell_old = '0'
 
 			if (len(current_price_buy_ids) > 0): 	
-				for current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[0],context=context):
-					price_unit_nett_last_buy = current_price_buy_ids.nett_1
+				for product_current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[0],context=context):
+					price_unit_nett_last_buy = product_current_price_buy_ids[0].nett_1
 				if (len(current_price_buy_ids) > 1): 
 					for product_current_price_buy_ids in product_current_price_obj.browse(cr, uid, current_price_buy_ids[1],context=context):
 						price_unit_nett_buy_old = product_current_price_buy_ids.nett_1
 						price_unit_buy_old = product_current_price_buy_ids.price_1
 						discount_string_buy_old = product_current_price_buy_ids.disc_1
 						partner_name = product_current_price_buy_ids.partner_id.name
-				#else:
-				#	price_unit_nett_buy_old = 0
-				#	price_unit_buy_old = 0
-				#	discount_string_buy_old = '0'
 
-			if (len(current_price_sell_ids) > 0):
-				for current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[0],context=context):
-					price_unit_nett_last_sell = current_price_sell_ids.nett_1
-				if (len(current_price_sell_ids) > 1):
+			if (len(current_price_sell_ids) > 0): #cuman ada current price yg baru dibikin itu
+				for product_current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[0],context=context):
+					price_unit_nett_last_sell = product_current_price_sell_ids[0].nett_1
+				if (len(current_price_sell_ids) > 1): 
 					for product_current_price_sell_ids in product_current_price_obj.browse(cr, uid, current_price_sell_ids[1],context=context):
 						price_unit_nett_sell_old = product_current_price_sell_ids.nett_1
 						price_unit_sell_old = product_current_price_sell_ids.price_1
-						discount_string_sell_old = product_current_price_sell_ids.disc_1		
-				#else:
-				#	price_unit_nett_sell_old = 0
-				#	price_unit_sell_old = 0
-				#	discount_string_sell_old = '0'
+						discount_string_sell_old = product_current_price_sell_ids.disc_1	
+
 		
 			if (tipe.type == 'sell'):
 				message_title = 'NEW SELL$:'+str(product_id.name_template)					

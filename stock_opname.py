@@ -201,3 +201,34 @@ class stock_opname_inject(osv.osv):
 		'location_id': lambda self, cr, uid, ctx: self.pool.get('res.users').browse(cr, uid, uid, ctx).branch_id.default_stock_location_id.id,
 	}
 '''
+
+class stock_inventory(osv.osv):
+	_inherit = 'stock.inventory'
+
+	#nambahin SO inject by ALICE
+	def action_done(self, cr, uid, ids, context=None):
+		result = super(stock_inventory, self).action_done(cr, uid, ids, context=context)
+		user_obj = self.pool.get('res.users')
+		domain = [
+				('name', '=', 'ALICE'),
+			]
+		alice = user_obj.search(cr, uid, domain)
+		wuid = alice[0]
+		stock_opname_inject = self.pool.get('stock.opname.inject')
+
+		for inventory in self.browse(cr, uid, ids, context=context):
+			for line in inventory.line_ids:
+				delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
+				old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
+				percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
+				# create SO inject
+				if percentage > 10:
+					stock_opname_inject.create(cr,wuid, {
+						'location_id': inventory.location_id.id,
+						'product_id': line.product_id.id,
+						'priority': 1,
+						'active': True,
+						'domain':'not',
+						'employee_id': inventory.employee_id.id,
+					})
+		return result
