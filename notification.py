@@ -104,36 +104,25 @@ class sale_order(osv.osv):
 			if param_data.key == 'notification_sale_limit':
 				sale_limit = float(param_data.value)
 		
-		for sale in self.browse(cr, uid, ids):
-			value = sale.amount_total
-			row_count = len(sale.order_line)
-			branch = sale.branch_id.name
-			cust_name = sale.partner_id.display_name
-			bon_number = sale.bon_number
-			desc = sale.client_order_ref
-			employee = sale.employee_id.name
-			line_str = ''
-			product_name = ''
-			product_watch = ''
-			for line in sale.order_line:
-				product_name = line.product_id.name_template
-				if line.product_id.sale_notification: 
-					product_watch = '[!!]'
-					product_name += product_watch
-				
-				line_str += str(line.product_uos_qty)+':'+product_name + '\n'
-				'''
-				if line.product_id.sale_notification: 
-					message_title = 'PRODUCT SALE NOTIFICATION'
-					message_body = 'Cust :'+ cust_name + '\n'  + str(line.product_uos_qty)+':' + line.product_id.name_template
-					context = {
-						'branch' : branch,
-						'category':'PRODUCT',
-						'sound_idx':PRODUCT_SOUND_IDX,
-						}
-					self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)				
-				'''
-		#message_body = sale.employee_id.name+'/'+str(row_count)+' items(s)/'+str("{:,.0f}".format(value))		
+		#for sale in self.browse(cr, uid, ids):
+		sale = self.browse(cr, uid, ids)
+		value = sale.amount_total
+		row_count = len(sale.order_line)
+		branch = sale.branch_id.name
+		cust_name = sale.partner_id.display_name
+		bon_number = sale.bon_number
+		desc = sale.client_order_ref
+		employee = sale.employee_id.name
+		line_str = ''
+		product_name = ''
+		product_watch = ''
+		for line in sale.order_line:
+			product_name = line.product_id.name_template
+			if line.product_id.sale_notification: 
+				product_watch = '[!!]'
+				product_name += product_watch
+			
+			line_str += str(line.product_uos_qty)+':'+product_name + '\n'				
 
 		if ((value >= sale_limit) or (product_watch == '[!!]')):
 			alert = '!'
@@ -170,31 +159,22 @@ class purchase_order(osv.osv):
 			if param_data.key == 'notification_purchase_limit':
 				purchase_limit = float(param_data.value)
 
-		for purchase in self.browse(cr, uid, ids, context=context):
-			value = purchase.amount_total
-			supplier_name = purchase.partner_id.display_name
-			row_count = len(purchase.order_line)
-			line_str = ''
-			product_watch = ''
-			for line in purchase.order_line:
-				qty_available = line.product_id.qty_available
-				product_name = line.product_id.name_template
-				if line.product_id.sale_notification: 
-					product_watch = '[!!]'
-					product_name += product_watch
+		#for purchase in self.browse(cr, uid, ids, context=context):
+		purchase = self.browse(cr, uid, ids, context=context)
+		value = purchase.amount_total
+		supplier_name = purchase.partner_id.display_name
+		row_count = len(purchase.order_line)
+		line_str = ''
+		product_watch = ''
+		for line in purchase.order_line:
+			qty_available = line.product_id.qty_available
+			product_name = line.product_id.name_template
+			if line.product_id.sale_notification: 
+				product_watch = '[!!]'
+				product_name += product_watch
 
-				line_str += str(line.product_qty)+':'+product_name + '\n'+'     Stock:'+str(qty_available)+'\n'
+			line_str += str(line.product_qty)+':'+product_name + '\n'+'     Stock:'+str(qty_available)+'\n'
 				
-				'''
-				if line.product_id.purchase_notification: 
-					message_title = 'PRODUCT PURCHASE NOTIFICATION'
-					message_body = 'Supplier :'+ supplier_name + '\n'  + str(line.product_qty)+':' + line.product_id.name_template +'\n'+'     Stock:'+str(qty_available)
-					context = {
-						'category':'PRODUCT',
-						'sound_idx':PRODUCT_SOUND_IDX,
-						}
-					self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-				'''
 		if ((value >= purchase_limit) or (product_watch == '[!!]')):
 			alert = '!'
 			for alert_lv in range(int(value // purchase_limit )):
@@ -226,9 +206,10 @@ class product_template(osv.osv):
 		new_id = super(product_template, self).create(cr, uid, vals, context)
 		
 		name = ''
-		for product in self.browse(cr, uid, new_id, context=context):
-			name = product.name
-			create_by = product.create_uid.name
+		#for product in self.browse(cr, uid, new_id, context=context):
+		product = self.browse(cr, uid, new_id, context=context)
+		name = product.name
+		create_by = product.create_uid.name
 
 		message_title = 'NEW ITEM CREATION'
 		message_body = 'NAME:'+str(name) +'\n'+'Created by :' +str(create_by)
@@ -270,7 +251,7 @@ class product_category(osv.osv):
 			#})
 		return result
 
-'''
+
 class account_invoice_line(osv.osv):
 	_inherit = 'account.invoice.line'
 
@@ -281,34 +262,36 @@ class account_invoice_line(osv.osv):
 		price_unit_nett_old = context.get('price_unit_nett_old',0)
 		price_unit = context.get('price_unit',0)
 		price_unit_old = context.get('price_unit_old',0)
-		#product_uom = context.get('product_uom',0)
-		#product_id = context.get('product_id',0)
-		#price_type_id = context.get('price_type_id',0)
 		name = context.get('name','')
 		invoice_id = context.get('invoice_id',0)
 		sell_price_unit = context.get('sell_price_unit',0)
+		buy_price_unit = context.get('buy_price_unit',0)
 		discount_string = context.get('discount_string','0')
 		discount_string_old = context.get('discount_string_old','0')
-		partner_name = context.get('partner_name','')
+		partner_names = context.get('partner_name','')
+		partner_name = partner_names if partner_names else '-'
 		partner_id = context.get('partner_id','')
+		invoice_type = context.get('type',0)
 
 		message_body = ''
 		line_str = ''
-		# cek perubahan harga beli
+		# cek perubahan harga
 		if (price_unit_nett_old > 0) and (price_unit > 0) and (round(price_unit_nett_old) != round(price_unit_nett)):
 			if round(price_unit_old) != round(price_unit):
 				message_body += 'PLIST From '+ str("{:,.0f}".format(price_unit_old))+' to '+str("{:,.0f}".format(price_unit)) +'\n'
 			if discount_string_old != discount_string:
 				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
-
-			line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'	
+			line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'
+			line_str += 'PARTNER:'+partner_name +'\n'
+			
+			if invoice_type == 'in_invoice': #buy
+				message_title = 'PURCHASE$:'+str(name)
+				line_str += 'SELL PRICE:'+str("{:,.0f}".format(sell_price_unit)) +'\n'
+			elif invoice_type == 'out_invoice': #sell
+				message_title = 'SALE$:'+str(name)
+				line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit)) +'\n'
+			
 			message_body += line_str
-
-			line_str += 'SELL PRICE:'+str("{:,.0f}".format(sell_price_unit)) +'\n'+'Supplier:'+partner_name
-			message_body += line_str
-
-			message_title = str(name)
-		
 			context = {
 				'category':'INVOICE',
 				'sound_idx':PURCHASE_SOUND_IDX,
@@ -318,31 +301,8 @@ class account_invoice_line(osv.osv):
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
-		#cek margin	###################### 
-		margin = sell_price_unit - price_unit_nett
-		old_margin = sell_price_unit - price_unit_nett_old
-		percentage = (margin/sell_price_unit) * 100
-		#ga ada margin bahkan jual rugi, force new sell price
-		if (margin <= 0) or (percentage < 1):
-			#cek margin lama
-			old_percentage = (old_margin/sell_price_unit) * 100 
-			if (old_percentage >= 2):
-				new_sell_price_unit = price_unit_nett + old_margin 	#mesti di round menuju 500 rupiah terdekat
-			else:
-				new_sell_price_unit = price_unit_nett + (price_unit_nett * 2 / 100)
-
-			message_title = str(name)	
-			message_body = "SELL FROM:"+str("{:,.0f}".format(sell_price_unit))+' TO '+str("{:,.0f}".format(new_sell_price_unit)) + '\n'+'BY:ALICE'
-			context = {
-				'category':'INVOICE',
-				'sound_idx':PURCHASE_SOUND_IDX,
-				'alert' : '!!!!!!!',
-				}
-
-			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-
 		return result
-'''
+
 
 class tbvip_bon_book(osv.osv):
 	_inherit = "tbvip.bon.book"
@@ -375,29 +335,28 @@ class stock_inventory(osv.osv):
 
 	def action_done(self, cr, uid, ids, context=None):
 		result = super(stock_inventory, self).action_done(cr, uid, ids, context=context)
-		for inventory in self.browse(cr, uid, ids, context=context):
-			row_total_qty = 0
-			for line in inventory.line_ids:
-				row_total_qty += line.product_qty
-				selisih =  line.product_qty - line.theoretical_qty
-				delta_old_and_new_total_qty_line = abs(selisih)
-				old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
-				precentage = (delta_old_and_new_total_qty_line/old_qty) * 100
-				# checking penalty
-				if precentage > 10:		
-					message_title = 'SO('+str(line.product_id.name_template)+')::'+str(inventory.location_id.name)	
-					message_body = 'DELTA:'+str(selisih)+'('+str(precentage)+'%)'+'\n'+'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)
-					#line_str = 'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)+'\n'+'LOCATION:'+str(inventory.location_id.name)
-					alert = ''
-					for alert_lv in range(int(precentage/10)):
-						alert += '!'
-					context = {
-						'category':'PRODUCT',
-						'sound_idx':PRODUCT_SOUND_IDX,
-						'alert' : alert,
-						#'lines' : line_str,
-						}
-					self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+		#for inventory in self.browse(cr, uid, ids, context=context):
+		row_total_qty = 0
+		inventory = self.browse(cr, uid, ids, context=context)
+		for line in inventory.line_ids:
+			row_total_qty += line.product_qty
+			selisih =  line.product_qty - line.theoretical_qty
+			delta_old_and_new_total_qty_line = abs(selisih)
+			old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
+			precentage = (delta_old_and_new_total_qty_line/old_qty) * 100
+			# checking penalty
+			if precentage > 10:		
+				message_title = 'SO('+str(line.product_id.name_template)+')::'+str(inventory.location_id.name)	
+				message_body = 'DELTA:'+str(selisih)+'('+str(precentage)+'%)'+'\n'+'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)
+				alert = ''
+				for alert_lv in range(int(precentage/10)):
+					alert += '!'
+				context = {
+					'category':'PRODUCT',
+					'sound_idx':PRODUCT_SOUND_IDX,
+					'alert' : alert,
+					}
+				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		return result
 
 class product_current_price(osv.osv):
@@ -416,7 +375,52 @@ class product_current_price(osv.osv):
 				discount_string = prices.disc_1
 				product_uom = prices.uom_id_1
 
+				message_body = ''
+				line_str = ''
+				message_title = ''
+				price_unit_old = 0
+				discount_string_old = '0'
+				price_unit_nett_old = 0
+				now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
 
+				if (tipe.type == 'sell'):
+					message_title = 'SELL$:'+str(product_id.name_template)
+				elif (tipe.type == 'buy'):
+					message_title = 'BUY$:'+str(product_id.name_template)
+
+				domain = [
+					('price_type_id', '=', tipe.id),
+					('product_id', '=', product_id.id),
+					('start_date','<=',now),
+					('partner_id','=',partner_id.id),
+				]
+				old_price_ids = self.search(cr, uid, domain, order='start_date DESC', limit=2)
+
+				if len(old_price_ids) > 1:
+					old_price_id = self.browse(cr,uid,old_price_ids[1],context=None)
+					price_unit_old = old_price_id.price_1
+					discount_string_old = old_price_id.disc_1
+					price_unit_nett_old = old_price_id.nett_1
+
+				message_body += 'PLIST From '+ str("{:,.0f}".format(price_unit_old))+' to '+str("{:,.0f}".format(price_unit)) +'\n'
+				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
+				line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'
+				line_str += 'PARTNER:'+ partner_id.name +'\n'
+				line_str += 'Created by :' +str(create_id.name)
+				message_body += line_str
+
+				context = {
+						'category':'PRODUCT',
+						'sound_idx':PRODUCT_SOUND_IDX,
+						'alert' : '!!!!!!!',
+						'lines' : line_str,
+						}
+				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+		
+	
+		return new_id
+
+		'''
 			product_current_price_obj = self.pool.get('product.current.price')
 			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
 			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
@@ -481,23 +485,15 @@ class product_current_price(osv.osv):
 				message_body += line_str
 				
 			if (tipe.type == 'buy'):
+				partner_name = partner_id.name
 				message_title = 'NEW BUY$:'+str(product_id.name_template)					
 				if round(price_unit_buy_old) != round(price_unit):
 					message_body += 'PLIST From '+ str("{:,.0f}".format(price_unit_buy_old))+' to '+str("{:,.0f}".format(price_unit)) +'\n'
 				if discount_string_buy_old != discount_string:
 					message_body += 'DISC From '+ str(discount_string_buy_old)+' to '+ str(discount_string) +'\n'
 				line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_buy_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'	
-				line_str += 'SELL PRICE:'+str("{:,.0f}".format(price_unit_nett_last_sell))
+				line_str += 'SELL PRICE:'+str("{:,.0f}".format(price_unit_nett_last_sell)) +'\n'+'Supplier:'+partner_name
 				message_body += line_str
-
-			message_body += 'Created by :' +str(create_id.name)
-			context = {
-					'category':'PRODUCT',
-					'sound_idx':PRODUCT_SOUND_IDX,
-					'alert' : '!!!!!!!',
-					'lines' : line_str,
-					}
-			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-
-		return new_id
+		'''
+			
 

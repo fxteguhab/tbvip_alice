@@ -6,10 +6,16 @@
 			<field name="model">product.template</field>
 			<field name="inherit_id" ref="product.product_template_form_view"/>
 			<field name="arch" type="xml">
-				<group name="sale_condition" position="inside">
-					<field name = "margin_string" />
-					<field name = "margin_amount" />
-				</group>
+				<notebook position="inside">
+					<page string="Margin">
+						<group string="Margin Analysis">
+							<field name = "base_margin_string" on_change="onchange_margin_string(base_margin_string)"/>
+							<field name = "base_margin_amount"/>
+							<field name = "real_margin_percentage" widget="progressbar"/>
+							<field name = "real_margin" />
+						</group>
+					</page>
+				</notebook>
 			</field>
 		</record>
 
@@ -20,9 +26,25 @@
 			<field name="inherit_id" ref="product.product_category_form_view"/>
 			<field name="arch" type="xml">
 				<field name="parent_id" position="after">
-					<field name = "margin_string" />
+					<field name = "base_margin_string" />
 				</field>
 			</field>
 		</record>
+
+		
+		<record model="ir.ui.view" id="product_template_tree_inherit_inherit">
+			<field name="name">product.template.product.tree.inherit.inherit</field>
+			<field name="model">product.template</field>
+			<field name="inherit_id" ref="product.product_template_tree_view"/>
+			<field name="arch" type="xml">
+				<field name="product_current_stock" position ="after">
+					<field name ="real_margin" />
+					<field name ="real_margin_percentage" widget="progressbar"/>
+				</field>
+			</field>
+		</record>
+		
 	</data>
 </openerp>
+
+

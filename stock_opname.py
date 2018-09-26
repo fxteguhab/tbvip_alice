@@ -16,11 +16,12 @@ class stock_opname_memory(osv.osv_memory):
 	# maka di form field/kolom location di Inventories (stock_opname_memory_line.location_id) dihide
 	# akhirnya kita harus ngisi satu2 field tsb berdasarkan stock_opname_memory.location_id
 		memory_line_obj = self.pool.get('stock.opname.memory.line')
-		for memory in self.browse(cr, uid, ids):
-			for line in memory.line_ids:
-				memory_line_obj.write(cr, uid, [line.id], {
-					'location_id': memory.location_id.id,
-					})
+		#for memory in self.browse(cr, uid, ids):
+		memory = self.browse(cr, uid, ids)
+		for line in memory.line_ids:
+			memory_line_obj.write(cr, uid, [line.id], {
+				'location_id': memory.location_id.id,
+				})
 		return super(stock_opname_memory, self).action_generate_stock_opname(cr, uid, ids, context=context)
 	
 	def _generate_stock_opname_products(self, cr, uid, location,context={}):
@@ -144,36 +145,33 @@ class stock_opname_memory(osv.osv_memory):
 
 	def action_load_inventories(self, cr, uid, ids, context=None):
 		stock_opname_memory_line_obj = self.pool.get('stock.opname.memory.line')
-		for so_memory in self.browse(cr, uid, ids):
-			stock_opname_memory_line_obj.unlink(cr, uid, so_memory.line_ids.ids, context=context)
-			new_line_ids = []
-			onchange_result = self.onchange_location_and_employee(cr, uid, ids,
-				so_memory.location_id.id, so_memory.rule_id.id, so_memory.employee_id.id, context=context)
-			if onchange_result['value']['line_ids']:
-				for line in onchange_result['value']['line_ids']:
-					new_line_ids.append((0, False, {
-						'inject_id': line['inject_id'] if line.get('inject_id', False) else 0,
-						'location_id': line['location_id'],
-						'product_id': line['product_id'].id,
-						#'inject_by': line['inject_id.create_uid.partner_id.name'] if line.get('inject_id.create_uid.partner_id.name', False) else 0,
-					}))
-				self.write(cr, uid, so_memory.id, {
-					'line_ids': new_line_ids,
-				})
-		# return {
-		# 	'type': 'ir.actions.client',
-		# 	'tag': 'reload',
-		# }
-			return {
-				'context': context,
-				'view_type': 'form',
-				'view_mode': 'form',
-				'res_model': 'stock.opname.memory',
-				'res_id': so_memory.id,
-				'view_id': False,
-				'type': 'ir.actions.act_window',
-				'target': 'new',
-			}
+		#for so_memory in self.browse(cr, uid, ids):
+		so_memory = self.browse(cr, uid, ids)
+		stock_opname_memory_line_obj.unlink(cr, uid, so_memory.line_ids.ids, context=context)
+		new_line_ids = []
+		onchange_result = self.onchange_location_and_employee(cr, uid, ids,
+			so_memory.location_id.id, so_memory.rule_id.id, so_memory.employee_id.id, context=context)
+		if onchange_result['value']['line_ids']:
+			for line in onchange_result['value']['line_ids']:
+				new_line_ids.append((0, False, {
+					'inject_id': line['inject_id'] if line.get('inject_id', False) else 0,
+					'location_id': line['location_id'],
+					'product_id': line['product_id'].id,
+				}))
+			self.write(cr, uid, so_memory.id, {
+				'line_ids': new_line_ids,
+			})
+
+		return {
+			'context': context,
+			'view_type': 'form',
+			'view_mode': 'form',
+			'res_model': 'stock.opname.memory',
+			'res_id': so_memory.id,
+			'view_id': False,
+			'type': 'ir.actions.act_window',
+			'target': 'new',
+		}
 	
 class stock_opname_memory_line(osv.osv_memory):
 	_inherit = "stock.opname.memory.line"
@@ -187,11 +185,12 @@ class stock_opname_memory_line(osv.osv_memory):
 		context = {} if context is None else None
 		product_obj = self.pool.get('product.product')
 		result = ''
-		for product in product_obj.browse(cr, uid, [product_id], context):
-			for product_sublocation_id in product.product_sublocation_ids:
-				branch_name = product_sublocation_id.branch_id.name if product_sublocation_id.branch_id.name else ''
-				sublocation_full_name = product_sublocation_id.sublocation_id.full_name if product_sublocation_id.sublocation_id.full_name else ''
-				result += branch_name + ' / ' + sublocation_full_name + '\r\n'
+		#for product in product_obj.browse(cr, uid, [product_id], context):
+		product = product_obj.browse(cr, uid, [product_id], context)
+		for product_sublocation_id in product.product_sublocation_ids:
+			branch_name = product_sublocation_id.branch_id.name if product_sublocation_id.branch_id.name else ''
+			sublocation_full_name = product_sublocation_id.sublocation_id.full_name if product_sublocation_id.sublocation_id.full_name else ''
+			result += branch_name + ' / ' + sublocation_full_name + '\r\n'
 		return {'value': {'sublocation': result}}
 '''
 class stock_opname_inject(osv.osv):
@@ -216,19 +215,20 @@ class stock_inventory(osv.osv):
 		wuid = alice[0]
 		stock_opname_inject = self.pool.get('stock.opname.inject')
 
-		for inventory in self.browse(cr, uid, ids, context=context):
-			for line in inventory.line_ids:
-				delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
-				old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
-				percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
-				# create SO inject
-				if percentage > 10:
-					stock_opname_inject.create(cr,wuid, {
-						'location_id': inventory.location_id.id,
-						'product_id': line.product_id.id,
-						'priority': 1,
-						'active': True,
-						'domain':'not',
-						'employee_id': inventory.employee_id.id,
-					})
+		#for inventory in self.browse(cr, uid, ids, context=context):
+		inventory = self.browse(cr, uid, ids, context=context)
+		for line in inventory.line_ids:
+			delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
+			old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
+			percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
+			# create SO inject
+			if percentage > 10:
+				stock_opname_inject.create(cr,wuid, {
+					'location_id': inventory.location_id.id,
+					'product_id': line.product_id.id,
+					'priority': 1,
+					'active': True,
+					'domain':'not',
+					'employee_id': inventory.employee_id.id,
+				})
 		return result
