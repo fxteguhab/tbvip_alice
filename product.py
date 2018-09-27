@@ -17,6 +17,7 @@ class product_template(osv.osv):
 
 	_defaults = {
 		'base_margin_string': '0',
+		'base_margin_amount': 0,
 	}
 
 	@api.onchange('base_margin_string')
@@ -27,38 +28,39 @@ class product_template(osv.osv):
 		template = self.browse(cr,uid,ids)
 		uom_id = template.uom_id
 		_max_discount = template._max_discount
-		variant = template.product_variant_ids[0]
-		#ambil harga beli dari last invoice if null then ambil dari price list
-		invoice_obj = self.pool.get('account.invoice.line')
-		invoice_line_id = invoice_obj.search(cr, uid, [('product_id','=',variant.id),('purchase_line_id','!=',None)],order='create_date DESC', limit=1)
-		if invoice_line_id:
-			invoice_line = invoice_obj.browse(cr, uid, invoice_line_id[0])
-			price_subtotal = invoice_line.price_subtotal
-			product_qty = invoice_line.quantity if invoice_line.quantity > 0 else 1
-			nett_price = price_subtotal / product_qty
-			buy_price_unit = nett_price
-		else:
-			price_type_id_buys = self.pool.get('price.type').search(cr,uid,[('type','=','buy'),('is_default','=',True),])
-			price_type_id_buy = price_type_id_buys[0]
-			price_list = self.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, uom_id.id, field="nett", context=context)
-			if price_list:
-				buy_price_unit = price_list
-		try:
-			valid_margin_string = margin_utility.validate_margin_string(margin_string, buy_price_unit,_max_discount)
-		except margin_utility.InvalidMarginException as exception:
-			raise osv.except_orm(_('Warning!'), exception.message)
-		total_margin = 0
-		for margin in margin_utility.calculate_margin(valid_margin_string,buy_price_unit,_max_discount):
-			total_margin += margin
-		
-		result.update({
-			'base_margin_amount': total_margin,
-		})
+		if len(template.product_variant_ids) > 0:
+			variant = template.product_variant_ids[0]
+			#ambil harga beli dari last invoice if null then ambil dari price list
+			invoice_obj = self.pool.get('account.invoice.line')
+			invoice_line_id = invoice_obj.search(cr, uid, [('product_id','=',variant.id),('purchase_line_id','!=',None)],order='create_date DESC', limit=1)
+			if invoice_line_id:
+				invoice_line = invoice_obj.browse(cr, uid, invoice_line_id[0])
+				price_subtotal = invoice_line.price_subtotal
+				product_qty = invoice_line.quantity if invoice_line.quantity > 0 else 1
+				nett_price = price_subtotal / product_qty
+				buy_price_unit = nett_price
+			else:
+				price_type_id_buys = self.pool.get('price.type').search(cr,uid,[('type','=','buy'),('is_default','=',True),])
+				price_type_id_buy = price_type_id_buys[0]
+				price_list = self.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, uom_id.id, field="nett", context=context)
+				if price_list:
+					buy_price_unit = price_list
+			try:
+				valid_margin_string = margin_utility.validate_margin_string(margin_string, buy_price_unit,_max_discount)
+			except margin_utility.InvalidMarginException as exception:
+				raise osv.except_orm(_('Warning!'), exception.message)
+			total_margin = 0
+			for margin in margin_utility.calculate_margin(valid_margin_string,buy_price_unit,_max_discount):
+				total_margin += margin
+			
+			result.update({
+				'base_margin_amount': total_margin,
+			})
 
-		if context.get('from_category',False):
-			self.write(cr, uid, template.id, result)
+			if context.get('from_category',False):
+				self.write(cr, uid, template.id, result)
 
-		return {'value': result}
+			return {'value': result}
 
 	@api.one
 	@api.depends('list_price','standard_price')
@@ -69,19 +71,22 @@ class product_template(osv.osv):
 			price_type_id_buy = record.pool.get('price.type').search(cr,uid,[('type','=','buy'),('is_default','=',True),])[0]
 			price_type_id_sell = record.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
 			general_customer_id = record.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')
-			variant = record.product_variant_ids[0]
-			
-			buy_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id,field="nett", context=None)
-			sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
-			
-			if record.list_price <= 1:
-				record.list_price = sell_price_unit_nett
-			if record.standard_price <= 1:
-				record.standard_price = buy_price_unit_nett			
-			
-			real_margin = sell_price_unit_nett - buy_price_unit_nett
-			buy_price = record.standard_price if record.standard_price > 0 else 1
-			percentage = (real_margin/buy_price) * 100 
+			real_margin = 0
+			percentage = 0
+			if len(record.product_variant_ids) > 0:
+				variant = record.product_variant_ids[0]
+				
+				buy_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id,field="nett", context=None)
+				sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
+				
+				if record.list_price <= 1:
+					record.list_price = sell_price_unit_nett
+				if record.standard_price <= 1:
+					record.standard_price = buy_price_unit_nett			
+				
+				real_margin = sell_price_unit_nett - buy_price_unit_nett
+				buy_price = record.standard_price if record.standard_price > 0 else 1
+				percentage = (real_margin/buy_price) * 100 
 			record.real_margin = real_margin
 			record.real_margin_percentage = percentage
 
