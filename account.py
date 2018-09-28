@@ -46,6 +46,7 @@ class account_invoice_line(osv.osv):
 			buy_price_type_id = context.get('price_type_id',0)
 			sell_price_unit = context.get('sell_price_unit',0)
 			sell_price_unit_nett = sell_price_unit
+			sell_price_unit_nett_old = sell_price_unit
 			
 		elif invoice_type == 'out_invoice': #sell
 			sell_price_unit = context.get('price_unit',0)
@@ -101,7 +102,7 @@ class account_invoice_line(osv.osv):
 			})	
 
 			#send notif
-			message_title = 'PURCHASE PRICE ALERT:'
+			message_title = 'PURCHASE INVOICE ALERT:'
 			message_body += 'NAME:' + str(name) +'\n'
 			if round(buy_price_unit_old) != round(buy_price_unit):
 				message_body += 'PLIST From '+ str("{:,.0f}".format(buy_price_unit_old))+' to '+str("{:,.0f}".format(buy_price_unit)) +'\n'
