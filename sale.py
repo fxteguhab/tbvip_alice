@@ -54,7 +54,7 @@ class sale_order(osv.osv):
 				product_watch += '[PRICE]'
 				extra_info += ' NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett))
 
-			if (margin <= 0):
+			if (sell_price_unit > 0) and (margin <= 0):
 				need_notif = True
 				product_watch += '[LOSS]'
 
