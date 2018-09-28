@@ -2,6 +2,10 @@ from openerp.osv import osv, fields
 from openerp import api
 import margin_utility
 
+SALES_SOUND_IDX = 0
+PURCHASE_SOUND_IDX = 2
+PRODUCT_SOUND_IDX = 1
+
 class product_template(osv.osv):
 	_inherit = 'product.template'
 
@@ -13,12 +17,36 @@ class product_template(osv.osv):
 		'real_margin' : fields.float('Real Margin Amount', compute="_compute_real_margin", group_operator="avg", readonly="True",store="True"),
 		'real_margin_percentage' : fields.float('Real Margin %', compute="_compute_real_margin", group_operator="avg",store="True"),
 		#'recommended_sale' : fields.float('Recommended Sale Price',compute="_compute_recommended_sale", store="True"),
+		'sale_notification' : fields.boolean('Sale Notification'),
+		'purchase_notification' : fields.boolean('Purchase Notification'),
 	}
 
 	_defaults = {
 		'base_margin_string': '0',
 		'base_margin_amount': 0,
 	}
+
+	# OVERRIDES ----------------------------------------------------------------------------------------------------------------
+	def create(self, cr, uid, vals, context={}):
+		new_id = super(product_template, self).create(cr, uid, vals, context)
+		
+		name = ''
+		#for product in self.browse(cr, uid, new_id, context=context):
+		product = self.browse(cr, uid, new_id, context=context)
+		name = product.name
+		create_by = product.create_uid.name
+
+		message_title = 'NEW ITEM CREATION'
+		message_body = 'NAME:'+str(name) +'\n'+'Created by :' +str(create_by)
+		context = {
+				'category':'PRODUCT',
+				'sound_idx':PRODUCT_SOUND_IDX,
+				}
+		self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+
+		return new_id
+
+
 
 	@api.onchange('base_margin_string')
 	def onchange_margin_string(self,cr,uid,ids,margin_string,context=None):
@@ -78,13 +106,14 @@ class product_template(osv.osv):
 				
 				buy_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id,field="nett", context=None)
 				sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
-				
+
 				if record.list_price <= 1:
 					record.list_price = sell_price_unit_nett
 				if record.standard_price <= 1:
 					record.standard_price = buy_price_unit_nett			
 				
-				real_margin = sell_price_unit_nett - buy_price_unit_nett
+				#real_margin = sell_price_unit_nett - buy_price_unit_nett
+				real_margin = record.list_price - record.standard_price
 				buy_price = record.standard_price if record.standard_price > 0 else 1
 				percentage = (real_margin/buy_price) * 100 
 			record.real_margin = real_margin
@@ -139,12 +168,18 @@ class product_template(osv.osv):
 class product_category(osv.osv):
 	_inherit = 'product.category'
 	_columns = {
+		'sale_notification' : fields.boolean('Sale Notification'),
+		'purchase_notification' : fields.boolean('Purchase Notification'),
 		'base_margin_string': fields.char('Margin'),
 	}
 
 	def write(self, cr, uid, ids, data, context=None):
 		result = super(product_category, self).write(cr, uid, ids, data, context)
+		
 		margin_string = data['base_margin_string'] if 'base_margin_string' in data else '0'
+		sale_notification = data['sale_notification'] if 'sale_notification' in data else False
+		purchase_notification = data['purchase_notification'] if 'purchase_notification' in data else False
+
 		product_obj = self.pool.get('product.template')
 		for category_id in ids:
 			product_ids = product_obj.search(cr, uid, [
@@ -152,6 +187,8 @@ class product_category(osv.osv):
 			])
 			product_obj.write(cr, uid, product_ids, {
 				'base_margin_string': margin_string,
+				'sale_notification': sale_notification,
+				'purchase_notification': purchase_notification,
 			})
 			for product_id in product_ids:
 				context = {
@@ -159,3 +196,4 @@ class product_category(osv.osv):
 				}
 				product_obj.onchange_margin_string(cr,uid,product_id,margin_string,context=context)
 		return result
+

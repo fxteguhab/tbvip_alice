@@ -1,8 +1,12 @@
 from openerp.osv import fields, osv
 import openerp.addons.decimal_precision as dp
-from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
+#from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from openerp.tools.translate import _
 from datetime import datetime, timedelta
+
+SALES_SOUND_IDX = 0
+PURCHASE_SOUND_IDX = 2
+PRODUCT_SOUND_IDX = 1
 
 class stock_opname_memory(osv.osv_memory):
 	_inherit = 'stock.opname.memory'
@@ -27,6 +31,7 @@ class stock_opname_memory(osv.osv_memory):
 	def _generate_stock_opname_products(self, cr, uid, location,context={}):
 		return self.algoritma_generate_so_products3(cr, uid, location,context=context)
 
+	'''
 	def algoritma_generate_so_products1(self, cr, uid, location,context={}):
 		today = datetime.now()
 		last_week = today - timedelta(days=7)
@@ -107,7 +112,7 @@ class stock_opname_memory(osv.osv_memory):
 		
 		return stock_opname_products
 
-
+	'''
 	def algoritma_generate_so_products3(self, cr, uid, location,context={}):
 		today = datetime.now()
 		last_week = today - timedelta(days=7)
@@ -192,43 +197,5 @@ class stock_opname_memory_line(osv.osv_memory):
 			sublocation_full_name = product_sublocation_id.sublocation_id.full_name if product_sublocation_id.sublocation_id.full_name else ''
 			result += branch_name + ' / ' + sublocation_full_name + '\r\n'
 		return {'value': {'sublocation': result}}
-'''
-class stock_opname_inject(osv.osv):
-	_inherit = 'stock.opname.inject'
-	
-	_defaults = {
-		'location_id': lambda self, cr, uid, ctx: self.pool.get('res.users').browse(cr, uid, uid, ctx).branch_id.default_stock_location_id.id,
-	}
-'''
 
-class stock_inventory(osv.osv):
-	_inherit = 'stock.inventory'
 
-	#nambahin SO inject by ALICE
-	def action_done(self, cr, uid, ids, context=None):
-		result = super(stock_inventory, self).action_done(cr, uid, ids, context=context)
-		user_obj = self.pool.get('res.users')
-		domain = [
-				('name', '=', 'ALICE'),
-			]
-		alice = user_obj.search(cr, uid, domain)
-		wuid = alice[0]
-		stock_opname_inject = self.pool.get('stock.opname.inject')
-
-		#for inventory in self.browse(cr, uid, ids, context=context):
-		inventory = self.browse(cr, uid, ids, context=context)
-		for line in inventory.line_ids:
-			delta_old_and_new_total_qty_line = abs(line.theoretical_qty - line.product_qty)
-			old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
-			percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
-			# create SO inject
-			if percentage > 10:
-				stock_opname_inject.create(cr,wuid, {
-					'location_id': inventory.location_id.id,
-					'product_id': line.product_id.id,
-					'priority': 1,
-					'active': True,
-					'domain':'not',
-					'employee_id': inventory.employee_id.id,
-				})
-		return result
