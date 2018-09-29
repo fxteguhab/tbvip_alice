@@ -25,7 +25,7 @@ class product_template(osv.osv):
 		'base_margin_string': '0',
 		'base_margin_amount': 0,
 	}
-
+	'''
 	# OVERRIDES ----------------------------------------------------------------------------------------------------------------
 	def create(self, cr, uid, vals, context={}):
 		new_id = super(product_template, self).create(cr, uid, vals, context)
@@ -45,7 +45,7 @@ class product_template(osv.osv):
 		self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
 		return new_id
-
+	'''
 
 
 	@api.onchange('base_margin_string')
