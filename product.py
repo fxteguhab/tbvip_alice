@@ -85,14 +85,15 @@ class product_template(osv.osv):
 				variant = record.product_variant_ids[0]
 				
 				#ambil harga dari price list
-				#buy_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id,field="nett", context=None)
-				#sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
+				buy_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id,field="nett", context=None)
+				sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
 
-				#if record.list_price <= 1:
-				#	record.list_price = sell_price_unit_nett
-				#if record.standard_price <= 1:
-				#	record.standard_price = buy_price_unit_nett			
+				if record.list_price <= 1:
+					record.list_price = sell_price_unit_nett
+				if record.standard_price <= 1:
+					record.standard_price = buy_price_unit_nett			
 				
+				'''
 				#ambil harga beli dari last invoice if null then ambil dari price list
 				invoice_obj = self.pool.get('account.invoice.line')
 				invoice_line_id = invoice_obj.search(cr, uid, [('product_id','=',variant.id),('purchase_line_id','!=',None)],order='create_date DESC', limit=1)
@@ -118,10 +119,11 @@ class product_template(osv.osv):
 					sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
 					if sell_price_unit_nett:
 						sell_price_unit = price_list
+				'''
 
-				real_margin = sell_price_unit - buy_price_unit
-				#real_margin = record.list_price - record.standard_price
-				buy_price = buy_price_unit if buy_price_unit > 0 else 1
+				#real_margin = sell_price_unit - buy_price_unit
+				real_margin = record.list_price - record.standard_price
+				buy_price = record.standard_price if record.standard_price > 0 else 1
 				percentage = (real_margin/buy_price) * 100 
 			record.real_margin = real_margin
 			record.real_margin_percentage = percentage
