@@ -25,28 +25,6 @@ class product_template(osv.osv):
 		'base_margin_string': '0',
 		'base_margin_amount': 0,
 	}
-	'''
-	# OVERRIDES ----------------------------------------------------------------------------------------------------------------
-	def create(self, cr, uid, vals, context={}):
-		new_id = super(product_template, self).create(cr, uid, vals, context)
-		
-		name = ''
-		#for product in self.browse(cr, uid, new_id, context=context):
-		product = self.browse(cr, uid, new_id, context=context)
-		name = product.name
-		create_by = product.create_uid.name
-
-		message_title = 'NEW ITEM CREATION'
-		message_body = 'NAME:'+str(name) +'\n'+'Created by :' +str(create_by)
-		context = {
-				'category':'PRODUCT',
-				'sound_idx':PRODUCT_SOUND_IDX,
-				}
-		self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-
-		return new_id
-	'''
-
 
 	@api.onchange('base_margin_string')
 	def onchange_margin_string(self,cr,uid,ids,margin_string,context=None):
@@ -101,20 +79,49 @@ class product_template(osv.osv):
 			general_customer_id = record.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')
 			real_margin = 0
 			percentage = 0
+			buy_price_unit = 0
+			sell_price_unit = 0
 			if len(record.product_variant_ids) > 0:
 				variant = record.product_variant_ids[0]
 				
-				buy_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id,field="nett", context=None)
-				sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
+				#ambil harga dari price list
+				#buy_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id,field="nett", context=None)
+				#sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
 
-				if record.list_price <= 1:
-					record.list_price = sell_price_unit_nett
-				if record.standard_price <= 1:
-					record.standard_price = buy_price_unit_nett			
+				#if record.list_price <= 1:
+				#	record.list_price = sell_price_unit_nett
+				#if record.standard_price <= 1:
+				#	record.standard_price = buy_price_unit_nett			
 				
-				#real_margin = sell_price_unit_nett - buy_price_unit_nett
-				real_margin = record.list_price - record.standard_price
-				buy_price = record.standard_price if record.standard_price > 0 else 1
+				#ambil harga beli dari last invoice if null then ambil dari price list
+				invoice_obj = self.pool.get('account.invoice.line')
+				invoice_line_id = invoice_obj.search(cr, uid, [('product_id','=',variant.id),('purchase_line_id','!=',None)],order='create_date DESC', limit=1)
+				if invoice_line_id:
+					invoice_line = invoice_obj.browse(cr, uid, invoice_line_id[0])
+					price_subtotal = invoice_line.price_subtotal
+					product_qty = invoice_line.quantity if invoice_line.quantity > 0 else 1
+					nett_price = price_subtotal / product_qty
+					buy_price_unit = nett_price
+				else:
+					buy_price_unit_nett = self.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, record.uom_id.id, field="nett", context=context)
+					if buy_price_unit_nett:
+						buy_price_unit = price_list
+
+				invoice_line_id = invoice_obj.search(cr, uid, [('product_id','=',variant.id),('purchase_line_id','=',None)],order='create_date DESC', limit=1)
+				if invoice_line_id:
+					invoice_line = invoice_obj.browse(cr, uid, invoice_line_id[0])
+					price_subtotal = invoice_line.price_subtotal
+					product_qty = invoice_line.quantity if invoice_line.quantity > 0 else 1
+					nett_price = price_subtotal / product_qty
+					sell_price_unit = nett_price
+				else:
+					sell_price_unit_nett = record.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_sell, record.uom_id.id, partner_id = general_customer_id[1],field="nett", context=None)
+					if sell_price_unit_nett:
+						sell_price_unit = price_list
+
+				real_margin = sell_price_unit - buy_price_unit
+				#real_margin = record.list_price - record.standard_price
+				buy_price = buy_price_unit if buy_price_unit > 0 else 1
 				percentage = (real_margin/buy_price) * 100 
 			record.real_margin = real_margin
 			record.real_margin_percentage = percentage

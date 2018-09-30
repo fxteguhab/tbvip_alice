@@ -23,6 +23,7 @@ class account_invoice_line(osv.osv):
 		product_uom = context.get('product_uom',0)
 		product_id = context.get('product_id',0)
 		origin = context.get('origin','')
+		categ_id = context.get('categ_id','')
 
 		buy_price_unit_nett = 0
 		buy_price_unit_nett_old = 0
@@ -99,6 +100,7 @@ class account_invoice_line(osv.osv):
 			'uom_id_1': product_uom,
 			'price_1': buy_price_unit,
 			'disc_1' : discount_string,	
+			'categ_id': categ_id,
 			})	
 
 			#send notif
