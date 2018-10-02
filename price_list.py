@@ -29,6 +29,7 @@ class product_current_price(osv.osv):
 			price_unit = prices.price_1
 			discount_string = prices.disc_1
 			product_uom = prices.uom_id_1
+			partner_name = partner_id.name if partner_id else ''
 
 			message_body = ''
 			line_str = ''
@@ -61,7 +62,7 @@ class product_current_price(osv.osv):
 			message_body += 'PLIST From '+ str("{:,.0f}".format(price_unit_old))+' to '+str("{:,.0f}".format(price_unit)) +'\n'
 			message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
 			line_str += 'NETT From '+ str("{:,.0f}".format(price_unit_nett_old))+' to '+str("{:,.0f}".format(price_unit_nett)) +'\n'
-			line_str += 'PARTNER:'+ partner_id.name +'\n'
+			line_str += 'PARTNER:'+ partner_name +'\n'
 			line_str += 'Created by :' +str(create_id.name)
 			message_body += line_str
 
