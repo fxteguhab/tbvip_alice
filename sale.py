@@ -28,6 +28,7 @@ class sale_order(osv.osv):
 		employee = sale.employee_id.name
 		line_str = ''
 		product_name = ''
+		sale_watch = ''
 		need_notif = False
 		for line in sale.order_line:
 			product_watch = ''
@@ -47,16 +48,22 @@ class sale_order(osv.osv):
 
 			if line.product_id.sale_notification: 
 				need_notif = True
-				product_watch += '[!!]'	
+				product_watch = '[!!]'
+				if '[!!]' not in sale_watch:
+					sale_watch += '[!!]'	
 			
-			if (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)):
+			if (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in product_name):
 				need_notif = True
-				product_watch += '[PRICE]'
+				product_watch = '[PRICE]'
+				if '[PRICE]' not in sale_watch:
+					sale_watch += '[PRICE]'	
 				extra_info += ' NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett))
 
 			if (sell_price_unit > 0) and (margin < 0):
 				need_notif = True
-				product_watch += '[LOSS]'
+				product_watch = '[LOSS]'
+				if '[LOSS]' not in sale_watch:
+					sale_watch += '[LOSS]'
 
 			product_name += product_watch + '('+str("{:,.0f}".format(margin))+')'
 			if (extra_info != ''):
@@ -67,7 +74,7 @@ class sale_order(osv.osv):
 			alert = '!'
 			for alert_lv in range(int(value // sale_limit )):
 				alert += '!'
-			message_title = 'SALE('+branch+')'+product_watch+':'
+			message_title = 'SALE('+branch+')'+sale_watch+':'
 			message_body = 'CUST:'+str(cust_name)+'\n'+ employee+'('+str(bon_number)+'):'+str(row_count)+' row(s):'+str("{:,.0f}".format(value))# +'\n'+'Cust:'+cust_name
 			if (desc):
 					message_body = message_body +'\n'+ 'Desc:'+ str(desc)

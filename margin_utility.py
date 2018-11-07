@@ -68,3 +68,13 @@ def calculate_margin(Margin_string, price, max_Margin):
 			result[len(result) - counter] = value
 			counter -= 1
 	return result
+
+def rounding_margin(original_value):
+	divider = 100
+	if (original_value > 2000):
+		divider = 500
+		
+	counter = original_value / divider
+	counter = round(counter)
+
+	return counter * divider

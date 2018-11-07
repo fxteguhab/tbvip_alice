@@ -1,6 +1,7 @@
 from openerp.osv import osv, fields
 from datetime import datetime
 from datetime import timedelta
+import margin_utility
 
 SALES_SOUND_IDX = 0
 PURCHASE_SOUND_IDX = 2
@@ -56,13 +57,15 @@ class account_invoice_line(osv.osv):
 			sell_price_unit_nett_old = context.get('price_unit_nett_old',0)
 			buy_price_unit = context.get('buy_price_unit',0)
 			buy_price_unit_nett = buy_price_unit
+			buy_price_unit_nett_old = buy_price_unit_nett
 			
 		
 		buy_price = buy_price_unit_nett if buy_price_unit_nett > 0 else 1
+		buy_price_old = buy_price_unit_nett_old if buy_price_unit_nett_old > 0 else 1
 		margin = sell_price_unit_nett - buy_price_unit_nett
 		percentage = (margin/buy_price) * 100
-		old_margin = sell_price_unit_nett_old - buy_price_unit_nett
-		old_percentage = (old_margin/buy_price) * 100 
+		old_margin = sell_price_unit_nett_old - buy_price_unit_nett_old
+		old_percentage = (old_margin/buy_price_old) * 100 
 			
 		
 
@@ -127,24 +130,39 @@ class account_invoice_line(osv.osv):
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-		'''
+		
 		#perubahan/diskon di bon jual
-		if (invoice_type == 'out_invoice') and (sell_price_unit_nett_old > 0) and (sell_price_unit > 0) and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)):
+		if (invoice_type == 'out_invoice') and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in product_name) and (sell_price_unit > 0):
+		#and (sell_price_unit_nett_old > 0) and (sell_price_unit > 0) and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)):
+
+			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
+			general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]
+			product_current_price_obj = self.pool.get('product.current.price')
+			user_obj = self.pool.get('res.users')
+			domain = [
+					('name', '=', 'ALICE'),
+				]
+			alice = user_obj.search(cr, uid, domain)
+			wuid = alice[0]
+			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
+
+			#Create new current sell price			
+			product_current_price_obj.create(cr, wuid, {
+			'price_type_id': sell_price_type_id,
+			'product_id': product_id,
+			'start_date': now,
+			'partner_id': partner_id,#general_customer_id,
+			'uom_id_1': product_uom,
+			'price_1': sell_price_unit,	
+			})	
 
 			#send notif
-			message_title = 'SALES PRICE CHANGE:'
+			message_title = 'ADJUST SALES PRICE'
 			message_body += 'NAME:' + str(name) +'\n'
-			if round(sell_price_unit) != round(sell_price_unit):
-				message_body += 'PLIST From '+ str("{:,.0f}".format(sell_price_unit_old))+' to '+str("{:,.0f}".format(sell_price_unit)) +'\n'
-			if discount_string_old != discount_string:
-				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
 			line_str += 'NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
-			line_str += 'PARTNER:'+partner_name +'\n'
-			line_str += 'ORIGIN:'+origin +'\n'
 			line_str += 'BUY PRICE:'+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.0f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.0f}".format(percentage))+'%)' +'\n'
 			
-
 			message_body += line_str
 			context = {
 				'category':'INVOICE',
@@ -154,24 +172,29 @@ class account_invoice_line(osv.osv):
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-		'''
-		'''
+		
+		
 		#ga ada margin bahkan jual rugi, force new sell price
 		if ((invoice_type == 'in_invoice') or (invoice_type == 'out_invoice')) and (sell_price_unit_nett > 0) and (margin != 0) and ((margin < 0) or (percentage < 1)):
 			
-			product_template_obj = self.pool.get('product.template')
-			product_product_obj = self.pool.get('product.product')
-			product = product_product_obj.browse(cr,uid,product_id,context=context)
-			product_template = product_template_obj.browse(cr,uid,product.tmpl_id,context=context)
-			new_margin = product_template.margin_amount
-			new_sell_price_unit = buy_price_unit_nett + new_margin 
+			#product_template_obj = self.pool.get('product.template')
+			#product_product_obj = self.pool.get('product.product')
+			#product = product_product_obj.browse(cr,uid,product_id,context=context)
+			#product_template = product_template_obj.browse(cr,uid,product.product_tmpl_id.id,context=context)
+			#new_margin = product_template.real_margin 
+			
+			new_margin = old_margin
+			new_sell_price_unit = margin_utility.rounding_margin(buy_price_unit_nett + new_margin)
+			
+			margin = new_sell_price_unit - buy_price_unit_nett
+			percentage = (margin/buy_price) * 100
 
 			message="ALICE : I'm changing %s sell price to %s" % (name,new_sell_price_unit)	
 			account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)
 			
 			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
 			general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]
-			#print "new_sell_price_unit:"+str(new_sell_price_unit)
+
 			#Create new current sell price			
 			product_current_price_obj.create(cr, wuid, {
 			'price_type_id': sell_price_type_id,
@@ -181,8 +204,24 @@ class account_invoice_line(osv.osv):
 			'uom_id_1': product_uom,
 			'price_1': new_sell_price_unit,	
 			})	
-		'''
-		
+
+			#send notif
+			message_title = 'NEW SALES PRICE'
+			message_body += 'NAME:' + str(name) +'\n'
+			line_str += 'NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
+			line_str += 'BUY PRICE:'+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
+			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.0f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.0f}".format(percentage))+'%)' +'\n'
+			
+			message_body += line_str
+			context = {
+				'category':'INVOICE',
+				'sound_idx':SALES_SOUND_IDX,
+				'alert' : '!!!!!!!',
+				'lines' : line_str,
+				}
+
+			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+			
 
 		return result
 		############################################################################################################################
