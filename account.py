@@ -132,7 +132,7 @@ class account_invoice_line(osv.osv):
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		
 		#perubahan/diskon di bon jual
-		if (invoice_type == 'out_invoice') and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in product_name) and (sell_price_unit > 0):
+		if (invoice_type == 'out_invoice') and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in name) and (sell_price_unit > 0):
 		#and (sell_price_unit_nett_old > 0) and (sell_price_unit > 0) and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)):
 
 			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
