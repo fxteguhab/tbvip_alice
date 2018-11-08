@@ -67,7 +67,15 @@ class account_invoice_line(osv.osv):
 		old_margin = sell_price_unit_nett_old - buy_price_unit_nett_old
 		old_percentage = (old_margin/buy_price_old) * 100 
 			
-		
+		account_invoice_obj = self.pool.get('account.invoice')
+		product_current_price_obj = self.pool.get('product.current.price')
+		user_obj = self.pool.get('res.users')
+		domain = [
+				('name', '=', 'ALICE'),
+			]
+		alice = user_obj.search(cr, uid, domain)
+		wuid = alice[0]
+		now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
 
 		#print "sell_price_unit_nett:"+str(sell_price_unit_nett)
 		#print "buy_price_unit_nett:"+str(buy_price_unit_nett)
@@ -81,16 +89,8 @@ class account_invoice_line(osv.osv):
 		#force create new buy price karena ada perubahan harga beli ##################################################################################################	
 		#if (invoice_type == 'in_invoice') and (buy_price_unit_nett_old > 0) and (buy_price_unit > 0) and (round(buy_price_unit_nett_old) != round(buy_price_unit_nett)):
 		if (invoice_type == 'in_invoice') and ((round(buy_price_unit_nett_old) != round(buy_price_unit_nett)) or (margin <= 0)):		
-			account_invoice_obj = self.pool.get('account.invoice')
-			product_current_price_obj = self.pool.get('product.current.price')
-			user_obj = self.pool.get('res.users')
-			domain = [
-					('name', '=', 'ALICE'),
-				]
-			alice = user_obj.search(cr, uid, domain)
-			wuid = alice[0]
-			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
-
+			
+			#send message to mail system
 			message="ALICE : I'm changing %s purchase price to %s" % (name,buy_price_unit_nett)	
 			account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)	
 	
@@ -106,7 +106,7 @@ class account_invoice_line(osv.osv):
 			'categ_id': categ_id,
 			})	
 
-			#send notif
+			#send notif to FCM
 			message_title = 'PURCHASE INVOICE ALERT:'
 			message_body += 'NAME:' + str(name) +'\n'
 			if round(buy_price_unit_old) != round(buy_price_unit):
@@ -137,14 +137,6 @@ class account_invoice_line(osv.osv):
 
 			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
 			general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]
-			product_current_price_obj = self.pool.get('product.current.price')
-			user_obj = self.pool.get('res.users')
-			domain = [
-					('name', '=', 'ALICE'),
-				]
-			alice = user_obj.search(cr, uid, domain)
-			wuid = alice[0]
-			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
 
 			#Create new current sell price			
 			product_current_price_obj.create(cr, wuid, {
