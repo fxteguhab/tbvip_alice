@@ -131,7 +131,7 @@ class account_invoice_line(osv.osv):
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		
-		#perubahan/diskon di bon jual
+		#perubahan/diskon di bon jual / SALA JUAL
 		if (invoice_type == 'out_invoice') and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in name) and (sell_price_unit > 0):
 		#and (sell_price_unit_nett_old > 0) and (sell_price_unit > 0) and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)):
 
@@ -152,7 +152,7 @@ class account_invoice_line(osv.osv):
 			message_title = 'ADJUST SALES PRICE'
 			message_body += 'NAME:' + str(name) +'\n'
 			line_str += 'NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
-			line_str += 'BUY PRICE:'+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
+			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.0f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.0f}".format(percentage))+'%)' +'\n'
 			
 			message_body += line_str
