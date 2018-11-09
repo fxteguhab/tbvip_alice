@@ -143,7 +143,7 @@ class account_invoice_line(osv.osv):
 			'price_type_id': sell_price_type_id,
 			'product_id': product_id,
 			'start_date': now,
-			'partner_id': partner_id,#general_customer_id,
+			'partner_id': general_customer_id,
 			'uom_id_1': product_uom,
 			'price_1': sell_price_unit,	
 			})	
@@ -201,7 +201,7 @@ class account_invoice_line(osv.osv):
 			message_title = 'NEW SALES PRICE'
 			message_body += 'NAME:' + str(name) +'\n'
 			line_str += 'NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
-			line_str += 'BUY PRICE:'+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
+			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.0f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.0f}".format(percentage))+'%)' +'\n'
 			
 			message_body += line_str
