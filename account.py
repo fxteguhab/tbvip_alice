@@ -132,7 +132,7 @@ class account_invoice_line(osv.osv):
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		
 		#perubahan/diskon di bon jual / SALA JUAL
-		if (invoice_type == 'out_invoice') and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in name) and (sell_price_unit > 0):
+		if (invoice_type == 'out_invoice') and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in name) and (sell_price_unit > 0) and (discount_string == ''):
 		#and (sell_price_unit_nett_old > 0) and (sell_price_unit > 0) and (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)):
 
 			sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
@@ -198,9 +198,9 @@ class account_invoice_line(osv.osv):
 			})	
 
 			#send notif
-			message_title = 'NEW SALES PRICE'
+			message_title = 'NEW SALE PRICE'
 			message_body += 'NAME:' + str(name) +'\n'
-			line_str += 'NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
+			line_str += 'NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(new_sell_price_unit)) +'\n'
 			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.0f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.0f}".format(percentage))+'%)' +'\n'
 			
@@ -208,7 +208,7 @@ class account_invoice_line(osv.osv):
 			context = {
 				'category':'INVOICE',
 				'sound_idx':SALES_SOUND_IDX,
-				'alert' : '!!!!!!!',
+				'alert' : '!!!!!!!!!!',
 				'lines' : line_str,
 				}
 
