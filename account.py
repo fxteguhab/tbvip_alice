@@ -186,11 +186,11 @@ class account_invoice_line(osv.osv):
 			line_str += 'NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
 			line_str += 'DISC: ' +str(discount_string) +'\n'
 			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
+			store = False
 			if (margin <=0):
 				line_str += '[!!]'
 				stored = True
-			else:
-				store = False
+				
 			line_str += 'MARGIN :'+str("{:,.0f}".format(margin))+'('+str("{:,.0f}".format(percentage))+'%)' +'\n'
 			
 			message_body += line_str
