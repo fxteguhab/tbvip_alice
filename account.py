@@ -179,7 +179,7 @@ class account_invoice_line(osv.osv):
 
 
 		#perubahan/diskon di bon jual / SALA JUAL
-		if (invoice_type == 'out_invoice') and (discount_string != ''): #ada discount line di sales
+		if (invoice_type == 'out_invoice') and (discount_string != False): #ada discount line di sales
 			#send notif
 			message_title = 'DISCOUNT SELL'
 			message_body += 'NAME:' + str(name) +'\n'
