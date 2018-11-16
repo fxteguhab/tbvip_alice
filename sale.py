@@ -17,7 +17,8 @@ class sale_order(osv.osv):
 			if param_data.key == 'notification_sale_limit':
 				sale_limit = float(param_data.value)
 		
-		#for sale in self.browse(cr, uid, ids):
+		product_obj = self.pool.get('product.product')
+
 		sale = self.browse(cr, uid, ids)
 		value = sale.amount_total
 		row_count = len(sale.order_line)
@@ -30,6 +31,7 @@ class sale_order(osv.osv):
 		product_name = ''
 		sale_watch = ''
 		need_notif = False
+		stored = False
 		for line in sale.order_line:
 			product_watch = ''
 			extra_info = ''
@@ -52,15 +54,19 @@ class sale_order(osv.osv):
 				if '[!!]' not in sale_watch:
 					sale_watch += '[!!]'	
 			
-			if (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in product_name):
-				need_notif = True
+			if (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in product_name) and (discount_string == False):
+				need_notif = False
 				product_watch = '[PRICE]'
 				if '[PRICE]' not in sale_watch:
 					sale_watch += '[PRICE]'	
 				extra_info += ' NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett))
 
+				#ubah product_id.list_price nya
+				product_obj._set_price(cr,uid,line.product_id.id,sell_price_unit_nett,'list_price')
+
 			if (sell_price_unit > 0) and (margin < 0):
 				need_notif = True
+				stored = True
 				product_watch = '[LOSS]'
 				if '[LOSS]' not in sale_watch:
 					sale_watch += '[LOSS]'
@@ -85,6 +91,7 @@ class sale_order(osv.osv):
 				'sound_idx':SALES_SOUND_IDX,
 				'lines' : line_str,
 				'alert' : alert,
+				'is_stored' : stored, 
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
