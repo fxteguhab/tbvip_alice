@@ -19,7 +19,14 @@ class product_current_price(osv.osv):
 		alice = user_obj.search(cr, uid, domain)
 		wuid = alice[0]
 
-		if (uid != SUPERUSER_ID) and (uid != wuid):	
+		user_obj = self.pool.get('res.users')
+		domain = [
+				('name', '=', 'FEI'),
+			]
+		fei = user_obj.search(cr, uid, domain)
+		fei_id = fei[0]
+
+		if (uid != SUPERUSER_ID) and (uid != wuid) and (uid != fei_id):	
 			prices = self.browse(cr, uid, new_id, context=context)
 			product_id = prices.product_id
 			tipe = prices.price_type_id
