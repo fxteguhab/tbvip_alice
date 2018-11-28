@@ -118,6 +118,7 @@ class account_invoice(osv.osv):
 			message_body += 'NAME:' + str(name) +'\n'
 			change_price = False
 
+			#GANTI HARGA PRICE LIST 
 			if round(buy_price_unit_old) != round(buy_price_unit):
 				message_body += 'PLIST From '+ str("{:,.0f}".format(buy_price_unit_old))+' to '+str("{:,.0f}".format(buy_price_unit)) +'\n'
 
@@ -150,9 +151,11 @@ class account_invoice(osv.osv):
 					'price_1': new_sell_price_unit,	
 					})	
 
+			#GANTI PROMO CAMPAIGN
 			if discount_string_old != discount_string:
 				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
 
+			#SUSUN NITIFICATION
 			line_str += 'BUY NETT From '+ str("{:,.0f}".format(buy_price_unit_nett_old))+' to '+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'PARTNER:'+partner_name +'\n'
 			line_str += 'ORIGIN:'+origin +'\n'
@@ -221,7 +224,7 @@ class account_invoice(osv.osv):
 
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 			else:
-				#send notif
+				#send notif jual tinting rugi
 				message_title += 'TINTING PAINT SELL LOSS'
 				message_body += 'NAME:' + str(name) +'\n'
 
@@ -239,8 +242,8 @@ class account_invoice(osv.osv):
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
 
-
-		#perubahan/diskon di bon jual / SALAH JUAL
+		'''
+		#perubahan/diskon di bon jual / SALAH JUAL --- PINDAH KE SALES SAJA
 		if (invoice_type == 'out_invoice') and (discount_string != False): #ada discount line di sales
 			#send notif
 			message_body = ''
@@ -267,9 +270,9 @@ class account_invoice(osv.osv):
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-
-
-		#ganti harga jual di bon jual ?!?!?!? notif doank ga ada rubah apa2
+		'''
+	
+		#ganti harga jual di bon jual ?!?!?!? notif doank ga ada rubah apa2, 
 		if (invoice_type == 'out_invoice') and (round(sell_price_unit_old) != round(sell_price_unit)) and ('BASE' not in name) and (sell_price_unit > 0):
 			#send notif
 			message_title = 'SELL PRICE UNIT CHANGE'
@@ -282,7 +285,7 @@ class account_invoice(osv.osv):
 			context = {
 				'category':'INVOICE',
 				'sound_idx':SALES_SOUND_IDX,
-				'alert' : '!!!!!!!',
+				'alert' : '!!!!!!!!!!!!',
 				'lines' : line_str,
 				}
 

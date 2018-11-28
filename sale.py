@@ -50,24 +50,29 @@ class sale_order(osv.osv):
 
 			if line.product_id.sale_notification: 
 				need_notif = True
-				product_watch = '[!!]'
+				product_watch += '[!!]'
 				if '[!!]' not in sale_watch:
 					sale_watch += '[!!]'	
 			
 			if (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in product_name) and (discount_string == False):
 				need_notif = False
-				product_watch = '[PRICE]'
+				product_watch += '[PRICE]'
 				if '[PRICE]' not in sale_watch:
 					sale_watch += '[PRICE]'	
 				extra_info += ' NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett))
-
 				#ubah product_id.list_price nya
 				product_obj._set_price(cr,uid,line.product_id.id,sell_price_unit_nett,'list_price')
+
+			if (discount_string != False) and ('BASE' not in product_name):
+				need_notif = False
+				product_watch += '[DISC]'
+				extra_info += ' Disc :'+str(discount_string) +'\n'
+				extra_info += ' NETT From '+ str("{:,.0f}".format(sell_price_unit_nett_old))+' to '+str("{:,.0f}".format(sell_price_unit_nett))
 
 			if (sell_price_unit > 0) and (margin < 0):
 				need_notif = True
 				stored = True
-				product_watch = '[LOSS]'
+				product_watch += '[LOSS]'
 				if '[LOSS]' not in sale_watch:
 					sale_watch += '[LOSS]'
 
