@@ -157,8 +157,8 @@ class account_invoice(osv.osv):
 
 			#SUSUN NITIFICATION
 			line_str += 'BUY NETT From '+ str("{:,.0f}".format(buy_price_unit_nett_old))+' to '+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
-			line_str += 'PARTNER:'+partner_name +'\n'
-			line_str += 'ORIGIN:'+origin +'\n'
+			line_str += 'PARTNER:'+str(partner_name) +'\n'
+			line_str += 'ORIGIN:'+str(origin) +'\n'
 			line_str += 'SELL PRICE:'+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.2f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%)' +'\n'
 			
