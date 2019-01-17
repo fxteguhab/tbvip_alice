@@ -1,0 +1,16 @@
+<openerp>
+	<data>
+
+		<record model="ir.ui.view" id="purchase_order_needs_form_inherit">
+			<field name="name">purchase.order.needs.form.inherit</field>
+			<field name="model">purchase.order</field>
+			<field name="inherit_id" ref="purchase.purchase_order_form"/>
+			<field name="arch" type="xml">
+				<field name="order_line" position="before">
+					<button type="object" name="action_load_needs" string="Load Purchase Needs" states="draft,sent,bid" class="oe_edit_only" confirm="Are you sure to replace purchased products below (if any) with system-suggested purchase needs?" />
+				</field>
+			</field>
+		</record>
+
+	</data>
+</openerp>

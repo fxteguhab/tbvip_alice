@@ -17,6 +17,7 @@
 	'views/notification_view.xml',
 	'views/stock_opname_view.xml',
 	'views/product_view.xml',
+	'views/purchase_needs_view.xml',
 	],
 	'installable': True,
 	'auto_install': False,
