@@ -11,7 +11,7 @@
 				</field>
 				<field name="price_subtotal" position="after">
 					<field name="create_uid" string="Input By" attrs="{'invisible': [('state','=','draft')]}" />
-					<!--<field name="wh_qty" string="Qty On Hand" />-->
+					<field name="wh_qty" string="Qty On Hand" />
 				</field>
 			</field>
 		</record>
