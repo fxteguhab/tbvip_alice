@@ -7,7 +7,11 @@
 			<field name="inherit_id" ref="purchase.purchase_order_form"/>
 			<field name="arch" type="xml">
 				<field name="order_line" position="before">
-					<button type="object" name="action_load_needs" string="Load Purchase Needs" states="draft,sent,bid" class="oe_edit_only" confirm="Are you sure to replace purchased products below (if any) with system-suggested purchase needs?" />
+					<button type="object" name="action_load_needs" string="Load Purchase Recommendation" states="draft,sent,bid" class="oe_edit_only" confirm="Are you sure to replace purchased products below (if any) with system-suggested purchase needs?" />
+				</field>
+				<field name="price_subtotal" position="after">
+					<field name="create_uid" string="Input By" attrs="{'invisible': [('state','=','draft')]}" />
+					<field name="wh_qty" string="Qty On Hand" />
 				</field>
 			</field>
 		</record>

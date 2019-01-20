@@ -105,7 +105,7 @@ class sale_history(osv.Model):
 	def maintenance_first_fill_sale_history(self, cr, uid, context={}):
 	# 20190106: jalankan method ini untuk menginisialisasi isi tabel sale history
 	# setelah dijalankan, method ini mau dihapus juga gapapa
-		first_year = 2016 # awal program dijalankan
+		first_year = 2018 # awal program dijalankan & data benar diinput
 		last_year = 2019 # sampe tahun ini
 		branch_ids = self.pool.get('tbvip.branch').search(cr, uid, [])
 		cr.execute("DELETE FROM sale_history")
@@ -115,6 +115,12 @@ class sale_history(osv.Model):
 					self.compute_monthly_qty(cr, uid, month, year, branch_id, context=context)
 
 # ===========================================================================================================================
+class purchase_order_line(osv.osv):
+	_inherit = 'purchase.order.line'
+
+	_columns = {
+		'wh_qty': fields.float('WH Qty'),
+	}
 
 class purchase_order(osv.osv):
 	_inherit = 'purchase.order'
@@ -147,11 +153,19 @@ class purchase_order(osv.osv):
 	# month" ke des 2014.
 		months1970_to = ((current_year - 1) - 1970) * 12 + 13
 		months1970_from = ((current_year - data_years) - 1970) * 12
+		#dibuang filed branch nya spy terambil data semua cabang sekaligus
+		cr.execute("""
+			SELECT * FROM sale_history 
+			WHERE 
+				product_id = %s AND months1970 BETWEEN %s AND %s
+			""" % (product_id,months1970_from,months1970_to))
+		'''
 		cr.execute("""
 			SELECT * FROM sale_history 
 			WHERE 
 				branch_id = %s AND product_id = %s AND months1970 BETWEEN %s AND %s
 			""" % (purchase.branch_id.id,product_id,months1970_from,months1970_to))
+		'''
 	# bikin matrix berisi penjualan per bulan dan rerata bulanan dan mingguan, dipisah per tahun
 		for row in cr.dictfetchall():
 			year = int(row['period'][0:4])
@@ -178,10 +192,12 @@ class purchase_order(osv.osv):
 		for year in delete_years: sale_matrix.pop(year)
 		if len(sale_matrix) == 0: return 0
 
-		print "product_id: %s" % product_id
-		print "branch_id: %s" % purchase.branch_id.id
-		for year in sale_matrix:
-			print sale_matrix[year]
+		#product_obj = self.pool.get('product.product')
+		#products = product_obj.browse(cr, uid, product_id)[0]
+		#print "product_id: %s" % products.name_template
+		#print "branch_id: %s" % purchase.branch_id.id
+		#for year in sale_matrix:
+			#print sale_matrix[year]
 
 	# hitung weight
 		weight = 0
@@ -190,23 +206,23 @@ class purchase_order(osv.osv):
 			if year == current_year: continue # skip tahun ini karena dia masih ada di matrix
 			weekly_qty.append(sale_matrix[year]['weekly_avg'])
 			year_avg = sale_matrix[year]['avg']
-			print "%s: %s %s %s" % (year,sale_matrix[year]['monthly_qty'][current_month-1],sale_matrix[year]['monthly_qty'][current_month],sale_matrix[year]['monthly_qty'][current_month+1])
+			#print "%s: %s %s %s" % (year,sale_matrix[year]['monthly_qty'][current_month-1],sale_matrix[year]['monthly_qty'][current_month],sale_matrix[year]['monthly_qty'][current_month+1])
 			if sale_matrix[year]['monthly_qty'][current_month-1] > year_avg: weight += 1
 			if sale_matrix[year]['monthly_qty'][current_month] > year_avg: weight += 1
 			if sale_matrix[year]['monthly_qty'][current_month+1] > year_avg: weight += 1
-		print "weight: %s" % weight
-		print "=================="
+		#print "weight: %s" % weight
+		#print "=================="
 
 	# masukkan rumus untuk hitung kebutuhan
 		jml_data = len(weekly_qty) * 3 # jumlah elemen weekly_qty diasumsikan idem tahun. 3 adalah current month +/- 1 
 		min_stock = float(sum(weekly_qty)) / max(len(weekly_qty), 1)
-		print "weekly_qty: "+str(weekly_qty)
+		#print "weekly_qty: "+str(weekly_qty)
 		if len(weekly_qty) == 0: weekly_qty = [0]
 		max_stock = max_coeff * max(weekly_qty)
 		delta_stock = max_stock - min_stock
 		if jml_data == 0: jml_data = 1
 		stock_limit = ((float(weight)/float(jml_data)) * delta_stock) + min_stock
-		print "jml_data: %s, min_stock: %s, max_stock: %s, delta_stock: %s, stock_limit: %s" % (jml_data, min_stock, max_stock, delta_stock, stock_limit)
+		#print "jml_data: %s, min_stock: %s, max_stock: %s, delta_stock: %s, stock_limit: %s" % (jml_data, min_stock, max_stock, delta_stock, stock_limit)
 	# ambil current_stock di lokasi cabang
 		branch = self.pool.get('tbvip.branch').browse(cr, uid, purchase.branch_id.id)
 		location_id = branch.default_stock_location_id.id
@@ -215,7 +231,7 @@ class purchase_order(osv.osv):
 		   FROM stock_quant WHERE product_id=%s AND location_id=%s
 		""" % (product_id, location_id))
 		row = cr.dictfetchone()
-		print row
+		#print row
 		if row:
 			current_qty = row.get('current_stock', 0)
 		else:
@@ -227,10 +243,13 @@ class purchase_order(osv.osv):
 			return 0
 
 	def action_load_needs(self, cr, uid, ids, context={}):
+		product_obj = self.pool.get('product.product')
 		purchase_obj = self.pool.get('purchase.order')
 		purchase = purchase_obj.browse(cr, uid, ids[0])
-		if not (purchase.branch_id and purchase.partner_id):
-			raise osv.except_osv(_('Purchase Error'),_('Please fill in branch and supplier before loading purchase needs.'))
+		#if not (purchase.branch_id and purchase.partner_id):
+			#raise osv.except_osv(_('Purchase Error'),_('Please fill in branch and supplier before loading purchase needs.'))
+		if not (purchase.partner_id):
+			raise osv.except_osv(_('Purchase Error'),_('Please fill in supplier before loading purchase needs.'))	
 	# ambil produk2 yang di-supply oleh supplier terpilih
 	# list(set()) adalah untuk membuat unik entri2 di list ybs
 		cr.execute("SELECT product_tmpl_id FROM product_supplierinfo WHERE name=%s" % purchase.partner_id.id)
@@ -240,18 +259,31 @@ class purchase_order(osv.osv):
 		product_ids = list(set(product_ids))
 	# mulai bikin result
 		new_order_lines = [[5]] # kosongkan dulu line yang sudah ada (jadi prinsipnya nimpa)
+		
+	#get user ALICE	
+		user_obj = self.pool.get('res.users')
+		domain = [
+				('name', '=', 'ALICE'),
+			]
+		alice = user_obj.search(cr, uid, domain)
+		wuid = alice[0]
+
 		for product_id in product_ids:
 			qty_need = self.calculate_purchase_need(cr, uid, product_id, purchase, context=context)
-			print "qty need: %s" % qty_need
+			products = product_obj.browse(cr, uid, product_id)[0]
+			wh_qty = products.qty_available
+			#print "qty need: %s" % qty_need
+			#print ""+'\n'
 		# hanya tambahkan kalau ada qty yang dibutuhkan
 			if qty_need > 0:
 				new_line = {
 					'product_id': product_id,
 					'product_qty': qty_need,
+					'wh_qty': wh_qty,
 				}
 			# jalankan onchange purchase order line untuk mengisi otomatis nilai2 yang perlu, seakan2 user 
 			# yang memilih product_id di form
-				oc_new_line = self.pool.get('purchase.order.line').onchange_product_id_tbvip(cr, uid, None, \
+				oc_new_line = self.pool.get('purchase.order.line').onchange_product_id_tbvip(cr, wuid, None, \
 					pricelist_id=purchase.pricelist_id.id, product_id=product_id, qty=qty_need, uom_id=None, 
 					partner_id=purchase.partner_id.id, parent_price_type_id=purchase.price_type_id.id, 
 					price_type_id=purchase.price_type_id.id)
@@ -261,6 +293,6 @@ class purchase_order(osv.osv):
 					new_line.update(oc_new_line['value'])
 					new_order_lines.append([0,False,new_line])
 	# timpa line baru ini ke purchase order
-		purchase_obj.write(cr, uid, [purchase.id], {
+		purchase_obj.write(cr, wuid, [purchase.id], {
 			'order_line': new_order_lines,
 			})
