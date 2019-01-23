@@ -10,7 +10,7 @@
 					<button type="object" name="action_load_needs" string="Load Purchase Recommendation" states="draft,sent,bid" class="oe_edit_only" confirm="Are you sure to replace purchased products below (if any) with system-suggested purchase needs?" />
 				</field>
 				<field name="price_subtotal" position="after">
-					<field name="create_uid" string="Input By" attrs="{'invisible': [('state','=','draft')]}" />
+					<field name="create_uid" string="Input By" />
 					<field name="wh_qty" string="Qty On Hand" />
 				</field>
 			</field>

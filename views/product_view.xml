@@ -16,6 +16,11 @@
 						</group>
 					</page>
 				</notebook>
+				<field name="uom_po_id" position="after">
+					<field name="minimum_purchase_qty" />
+					<field name="maximum_purchase_qty" />
+					<field name="multiple_purchase_qty" />
+				</field>
 			</field>
 		</record>
 

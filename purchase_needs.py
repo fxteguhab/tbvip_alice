@@ -115,6 +115,23 @@ class sale_history(osv.Model):
 					self.compute_monthly_qty(cr, uid, month, year, branch_id, context=context)
 
 # ===========================================================================================================================
+class product_template(osv.osv):
+	_inherit = 'product.template'
+
+# COLUMNS ---------------------------------------------------------------------------------------------------------------
+	_columns = {
+		'minimum_purchase_qty': fields.float('Minimum Purchase Qty'),
+		'maximum_purchase_qty': fields.float('Maximum Purchase Qty'),
+		'multiple_purchase_qty': fields.float('Purchase Qty Multiple'),
+
+	}
+# DEFAULTS ----------------------------------------------------------------------------------------------------------------------
+	_defaults = {
+		'minimum_purchase_qty': 1,
+		'multiple_purchase_qty' : 1,
+	}
+
+# ===========================================================================================================================
 class purchase_order_line(osv.osv):
 	_inherit = 'purchase.order.line'
 
@@ -272,19 +289,34 @@ class purchase_order(osv.osv):
 			qty_need = self.calculate_purchase_need(cr, uid, product_id, purchase, context=context)
 			products = product_obj.browse(cr, uid, product_id)[0]
 			wh_qty = products.qty_available
+			uom_id = products.uom_po_id.id #unit of measurement for purchase
+			qty_minimum = products.minimum_purchase_qty
+			qty_multiple = products.multiple_purchase_qty
+			if (qty_multiple <= 0):	qty_multiple = 1
+			if (qty_minimum <= 0):	qty_minimum = 1
+			qty_order = 0
 			#print "qty need: %s" % qty_need
 			#print ""+'\n'
 		# hanya tambahkan kalau ada qty yang dibutuhkan
-			if qty_need > 0:
+			if qty_need >= qty_minimum:
+				qty_order = (qty_need // qty_multiple) * qty_multiple
+				remainder = float((qty_need % qty_multiple)) / float(qty_multiple)
+				if remainder > 0.75 :
+					qty_order += qty_multiple 	
+			else:
+				remainder = float((qty_need % qty_minimum)) / float(qty_minimum)
+				if round(remainder,1) >= 0.4: qty_order += qty_minimum 
+
+			if (qty_order > 0):
 				new_line = {
 					'product_id': product_id,
-					'product_qty': qty_need,
+					'product_qty': qty_order,
 					'wh_qty': wh_qty,
 				}
 			# jalankan onchange purchase order line untuk mengisi otomatis nilai2 yang perlu, seakan2 user 
 			# yang memilih product_id di form
 				oc_new_line = self.pool.get('purchase.order.line').onchange_product_id_tbvip(cr, wuid, None, \
-					pricelist_id=purchase.pricelist_id.id, product_id=product_id, qty=qty_need, uom_id=None, 
+					pricelist_id=purchase.pricelist_id.id, product_id=product_id, qty=qty_order, uom_id=uom_id,#None, 
 					partner_id=purchase.partner_id.id, parent_price_type_id=purchase.price_type_id.id, 
 					price_type_id=purchase.price_type_id.id)
 			# hanya tambahkan line yang ada price unitnya. asumsinya, kalau ada price_unit berarti 
