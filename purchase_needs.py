@@ -305,8 +305,8 @@ class purchase_order(osv.osv):
 					qty_order += qty_multiple 	
 			else:
 				remainder = float((qty_need % qty_minimum)) / float(qty_minimum)
-				if round(remainder,1) >= 0.4: qty_order += qty_minimum 
-
+				if (round(remainder,1) >= 0.4 or (wh_qty <= 0)): qty_order += qty_minimum 
+			
 			if (qty_order > 0):
 				new_line = {
 					'product_id': product_id,
