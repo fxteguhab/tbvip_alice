@@ -141,7 +141,7 @@ class purchase_order_line(osv.osv):
 
 class purchase_order(osv.osv):
 	_inherit = 'purchase.order'
-	
+
 	def calculate_purchase_need(self, cr, uid, product_id, purchase, context={}):
 	# ambil data X tahun terakhir, dari januari s/d desember 
 		purchase_date = datetime.strptime(purchase.date_order, DEFAULT_SERVER_DATETIME_FORMAT)
@@ -241,12 +241,20 @@ class purchase_order(osv.osv):
 		stock_limit = ((float(weight)/float(jml_data)) * delta_stock) + min_stock
 		#print "jml_data: %s, min_stock: %s, max_stock: %s, delta_stock: %s, stock_limit: %s" % (jml_data, min_stock, max_stock, delta_stock, stock_limit)
 	# ambil current_stock di lokasi cabang
+		'''
 		branch = self.pool.get('tbvip.branch').browse(cr, uid, purchase.branch_id.id)
 		location_id = branch.default_stock_location_id.id
 		cr.execute("""
 		   SELECT sum(qty) as current_stock 
 		   FROM stock_quant WHERE product_id=%s AND location_id=%s
 		""" % (product_id, location_id))
+		'''
+
+		cr.execute("""
+		   SELECT sum(qty) as current_stock 
+		   FROM stock_quant WHERE product_id=%s
+		""" % (product_id))
+
 		row = cr.dictfetchone()
 		#print row
 		if row:
@@ -272,8 +280,11 @@ class purchase_order(osv.osv):
 		cr.execute("SELECT product_tmpl_id FROM product_supplierinfo WHERE name=%s" % purchase.partner_id.id)
 		product_tmpl_ids = [row['product_tmpl_id'] for row in cr.dictfetchall()]
 		product_tmpl_ids = list(set(product_tmpl_ids))
-		product_ids = self.pool.get('product.product').search(cr, uid, [('product_tmpl_id','in',product_tmpl_ids)])
-		product_ids = list(set(product_ids))
+		product_ids = self.pool.get('product.product').search(cr, uid, [('product_tmpl_id','in',product_tmpl_ids)],order='name_template')
+		
+		#line ini buat apa Ko Juned ??
+		#product_ids = list(set(product_ids))
+		
 	# mulai bikin result
 		new_order_lines = [[5]] # kosongkan dulu line yang sudah ada (jadi prinsipnya nimpa)
 		
