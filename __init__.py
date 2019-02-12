@@ -10,3 +10,4 @@ import price_list
 import bon
 import product_template
 import purchase_needs
+import hr

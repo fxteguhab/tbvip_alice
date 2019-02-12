@@ -33,7 +33,7 @@ class stock_inventory(osv.osv):
 				stock_opname_inject.create(cr,wuid, {
 					'location_id': inventory.location_id.id,
 					'product_id': line.product_id.id,
-					'priority': 1,
+					'priority': 2,
 					'active': True,
 					'domain':'not',
 					'employee_id': inventory.employee_id.id,
