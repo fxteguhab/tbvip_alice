@@ -83,13 +83,14 @@ class sale_history(osv.Model):
 			WHERE branch_id = %s AND period = '%s'
 			""" % (branch_id, period))
 		for row in sales:
-			self.create(cr, uid, {
-				'product_id': row['product_id'],
-				'branch_id': branch_id,
-				'period': period,
-				'months1970': months1970,
-				'sale_qty': row['qty_total']
-				})
+			if row['product_uom'] == 1: #sementara hanya ambil penjualan yg pcs, karena UoM masih konflik
+				self.create(cr, uid, {
+					'product_id': row['product_id'],
+					'branch_id': branch_id,
+					'period': period,
+					'months1970': months1970,
+					'sale_qty': row['qty_total']
+					})
 
 # CRON ---------------------------------------------------------------------------------------------------------------------
 	
