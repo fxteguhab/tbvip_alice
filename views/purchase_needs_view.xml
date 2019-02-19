@@ -16,5 +16,19 @@
 			</field>
 		</record>
 
+		<record forcecreate="True" id="ir_cron_calculate_product_qty_sold" model="ir.cron">
+			<field name="name">Calculate Product Qty Sold</field>
+			<field name="active" eval="True"  />
+			<field name="user_id" ref="base.user_root" />
+			<field name="interval_number">1</field>
+			<field name="interval_type">months</field>
+			<field name="numbercall">-1</field>
+			<field name="doall">1</field>
+			<field name="model" eval="'sale_history'"  />
+			<field name="function" eval="cron_calculate_product_qty_sold" />
+			<field name="args" eval=""  />
+		</record>
+
+
 	</data>
 </openerp>
