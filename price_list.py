@@ -47,9 +47,9 @@ class product_current_price(osv.osv):
 			now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
 
 			if (tipe.type == 'sell'):
-				message_title = 'NEW SELL PRICE:'
+				message_title = 'NEW SELL PRICE LIST:'
 			elif (tipe.type == 'buy'):
-				message_title = 'NEW BUY PRICE:'
+				message_title = 'NEW BUY PRICE LIST:'
 
 			domain = [
 				('price_type_id', '=', tipe.id),

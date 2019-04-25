@@ -17,6 +17,8 @@ class account_invoice(osv.osv):
 		invoice_id = context.get('invoice_id',0)
 		discount_string = context.get('discount_string','0')
 		discount_string_old = context.get('discount_string_old','0')
+		if discount_string_old == False:
+			discount_string_old = 0
 		partner_names = context.get('partner_name','')
 		partner_name = partner_names if partner_names else '-'
 		partner_id = context.get('partner_id','')
@@ -154,6 +156,7 @@ class account_invoice(osv.osv):
 			#GANTI PROMO CAMPAIGN
 			if discount_string_old != discount_string:
 				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
+				message_title = 'PURCHASE INVOICE PROMO ALERT'
 
 			#SUSUN NITIFICATION
 			line_str += 'BUY NETT From '+ str("{:,.0f}".format(buy_price_unit_nett_old))+' to '+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
@@ -275,8 +278,8 @@ class account_invoice(osv.osv):
 		#ganti harga jual di bon jual ?!?!?!? notif doank ga ada rubah apa2, 
 		if (invoice_type == 'out_invoice') and (round(sell_price_unit_old) != round(sell_price_unit)) and ('BASE' not in name) and (sell_price_unit > 0):
 			#send notif
-			message_title = 'SELL PRICE UNIT CHANGE'
-			message_body += 'NAME:' + str(name) +'\n'
+			message_title = 'SELL PRICE UNIT CHANGE (notif only)'
+			message_body = 'NAME:' + str(name) +'\n'
 			line_str += 'PRICE From '+ str("{:,.0f}".format(sell_price_unit_old))+' to '+str("{:,.0f}".format(sell_price_unit)) +'\n'
 			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.2f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%)' +'\n'

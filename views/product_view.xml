@@ -17,6 +17,7 @@
 					</page>
 				</notebook>
 				<field name="uom_po_id" position="after">
+					<field name="seller_id" />
 					<field name="minimum_purchase_qty" />
 					<field name="maximum_purchase_qty" />
 					<field name="multiple_purchase_qty" />
@@ -43,8 +44,11 @@
 			<field name="inherit_id" ref="product.product_template_tree_view"/>
 			<field name="arch" type="xml">
 				<field name="product_current_stock" position ="after">
-					<field name ="real_margin" />
-					<field name ="real_margin_percentage" widget="progressbar"/>
+					<field name ="recommended_qty" />
+					<field name ="min_qty" />
+					<field name ="max_qty" />
+					<field name ="real_margin" groups="tbvip.group_management_central"/>
+					<field name ="real_margin_percentage" groups="tbvip.group_management_central" widget="progressbar"/>
 				</field>
 			</field>
 		</record>
