@@ -11,6 +11,10 @@ PRODUCT_SOUND_IDX = 1
 class stock_opname_memory(osv.osv_memory):
 	_inherit = 'stock.opname.memory'
 	
+	_columns = {
+		'allow_so': fields.related('employee_id', 'allow_so', type="boolean", string="allow_so"),
+	}
+
 	_defaults = {
 		'location_id': lambda self, cr, uid, ctx: self.pool.get('res.users').browse(cr, uid, uid, ctx).branch_id.default_stock_location_id.id,
 	}
@@ -19,15 +23,19 @@ class stock_opname_memory(osv.osv_memory):
 	# karena di tbvip location stock opname per barang pasti idem Inventoried Location,
 	# maka di form field/kolom location di Inventories (stock_opname_memory_line.location_id) dihide
 	# akhirnya kita harus ngisi satu2 field tsb berdasarkan stock_opname_memory.location_id
-		memory_line_obj = self.pool.get('stock.opname.memory.line')
-		#for memory in self.browse(cr, uid, ids):
-		memory = self.browse(cr, uid, ids)
-		for line in memory.line_ids:
-			memory_line_obj.write(cr, uid, [line.id], {
-				'location_id': memory.location_id.id,
-				})
-		return super(stock_opname_memory, self).action_generate_stock_opname(cr, uid, ids, context=context)
-	
+			memory_line_obj = self.pool.get('stock.opname.memory.line')
+			memory = self.browse(cr, uid, ids)
+			is_override = context.get('is_override',False)
+			if is_override or memory.allow_so:
+				for line in memory.line_ids:
+					memory_line_obj.write(cr, uid, [line.id], {
+						'location_id': memory.location_id.id,
+						})
+				return super(stock_opname_memory, self).action_generate_stock_opname(cr, uid, ids, context=context)
+			else:
+				raise osv.except_orm(_('Employee Stock Opname Block'),
+				_('Employee : %s cannot do Stock Opname at this moment' % (memory.employee_id.name_related)))
+
 	def _generate_stock_opname_products(self, cr, uid, location,context={}):
 		return self.algoritma_generate_so_products3(cr, uid, location,context=context)
 
@@ -137,7 +145,13 @@ class stock_opname_memory(osv.osv_memory):
 					) AND so_line.stock_location_id = \'{}\'
 					  AND so_line.write_date < \'{}\' 
 					  AND so_line.write_date > \'{}\'	
-				) AS product_last_sale_date	  
+				) AS product_last_sale_date,
+				product_product product_product,
+				product_template product_template
+				WHERE 
+				product_id = product_product.id AND
+				product_product.product_tmpl_id = product_template.id AND
+				product_template.auto_so = 't'
 				ORDER BY
 					last_sale_date ASC
 			""".format(location, last_week, location, today, last_month)
@@ -145,7 +159,7 @@ class stock_opname_memory(osv.osv_memory):
 		stock_opname_products = []
 		for row in cr.dictfetchall():
 			stock_opname_products.append({'product_id': row['product_id']})
-		
+
 		return stock_opname_products
 
 	def action_load_inventories(self, cr, uid, ids, context=None):
@@ -197,5 +211,3 @@ class stock_opname_memory_line(osv.osv_memory):
 			sublocation_full_name = product_sublocation_id.sublocation_id.full_name if product_sublocation_id.sublocation_id.full_name else ''
 			result += branch_name + ' / ' + sublocation_full_name + '\r\n'
 		return {'value': {'sublocation': result}}
-
-

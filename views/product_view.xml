@@ -108,6 +108,7 @@
 					<field name ="min_qty" />
 					<field name ="max_qty" />
 					<field name ="overstock_koef" readonly="True"/>
+					<field name ="auto_so" />
 				</field>
 			</field>
 		</record>

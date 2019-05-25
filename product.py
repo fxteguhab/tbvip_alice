@@ -160,6 +160,7 @@ class product_template(osv.osv):
 		'min_qty': fields.float("Min Qty", group_operator="avg"),
 		'max_qty': fields.float("Max Qty", group_operator="avg"),
 		'overstock_koef' : fields.float("Overstock Koef"),
+		'auto_so': fields.boolean('Allow SO', help="Allow to be included in auto generated stock opname"),
 	}
 
 	_defaults = {
@@ -167,6 +168,7 @@ class product_template(osv.osv):
 		'base_margin_amount': 0,
 		'min_qty' : 0,
 		'max_qty' : 0,
+		'auto_so' : True,
 	}
 
 	@api.onchange('base_margin_string')
