@@ -28,7 +28,7 @@ class stock_inventory(osv.osv):
 			old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
 			percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
 			# create SO inject & notif, later create penalty
-			if percentage > 10:
+			if percentage > 50:
 				#create inject
 				stock_opname_inject.create(cr,wuid, {
 					'location_id': inventory.location_id.id,
@@ -43,13 +43,12 @@ class stock_inventory(osv.osv):
 				message_title = 'SO('+str(line.product_id.name_template)+')::'+str(inventory.location_id.name)	
 				message_body = 'DELTA:'+str(selisih)+'('+str(percentage)+'%)'+'\n'+'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)
 				alert = ''
-				for alert_lv in range(int(percentage/10)):
+				for alert_lv in range(int(percentage/50)):
 					alert += '!'
 				context = {
 					'category':'PRODUCT',
 					'sound_idx':PRODUCT_SOUND_IDX,
 					'alert' : alert,
-					'is_stored' : False, 
 					}
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		return result
