@@ -37,7 +37,8 @@ class stock_opname_memory(osv.osv_memory):
 				_('Employee : %s cannot do Stock Opname at this moment' % (memory.employee_id.name_related)))
 
 	def _generate_stock_opname_products(self, cr, uid, location,context={}):
-		return self.algoritma_generate_so_products3(cr, uid, location,context=context)
+		#return self.algoritma_generate_so_products3(cr, uid, location,context=context)
+		return self.algoritma_generate_so_products_all_delima(cr, uid, location,context=context)
 
 	'''
 	def algoritma_generate_so_products1(self, cr, uid, location,context={}):
@@ -155,6 +156,21 @@ class stock_opname_memory(osv.osv_memory):
 				ORDER BY
 					last_sale_date ASC
 			""".format(location, last_week, location, today, last_month)
+		)
+		stock_opname_products = []
+		for row in cr.dictfetchall():
+			stock_opname_products.append({'product_id': row['product_id']})
+
+		return stock_opname_products
+
+	def algoritma_generate_so_products_all_delima(self, cr, uid, location,context={}):		
+		cr.execute("""				
+			SELECT DISTINCT
+				product_id
+			FROM stock_quant
+				WHERE 
+				location_id = '64'
+			"""
 		)
 		stock_opname_products = []
 		for row in cr.dictfetchall():
