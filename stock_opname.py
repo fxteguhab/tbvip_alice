@@ -37,8 +37,7 @@ class stock_opname_memory(osv.osv_memory):
 				_('Employee : %s cannot do Stock Opname at this moment' % (memory.employee_id.name_related)))
 
 	def _generate_stock_opname_products(self, cr, uid, location,context={}):
-		#return self.algoritma_generate_so_products3(cr, uid, location,context=context)
-		return self.algoritma_generate_so_products_all_delima(cr, uid, location,context=context)
+		return self.algoritma_generate_so_products3(cr, uid, location,context=context)
 
 	'''
 	def algoritma_generate_so_products1(self, cr, uid, location,context={}):
@@ -163,20 +162,21 @@ class stock_opname_memory(osv.osv_memory):
 
 		return stock_opname_products
 
-	def algoritma_generate_so_products_all_delima(self, cr, uid, location,context={}):		
-		cr.execute("""				
-			SELECT DISTINCT
-				product_id
-			FROM stock_quant
-				WHERE 
-				location_id = '64'
-			"""
-		)
-		stock_opname_products = []
-		for row in cr.dictfetchall():
-			stock_opname_products.append({'product_id': row['product_id']})
-
-		return stock_opname_products
+	
+	#def algoritma_generate_so_products_all_delima(self, cr, uid, location,context={}):		
+	#	cr.execute("""				
+	#		SELECT DISTINCT
+	#			product_id
+	#		FROM stock_quant
+	#			WHERE 
+	#			location_id = '64'
+	#		"""
+	#	)
+	#	stock_opname_products = []
+	#	for row in cr.dictfetchall():
+	#		stock_opname_products.append({'product_id': row['product_id']})
+	#
+	#	return stock_opname_products	
 
 	def action_load_inventories(self, cr, uid, ids, context=None):
 		stock_opname_memory_line_obj = self.pool.get('stock.opname.memory.line')
@@ -206,7 +206,7 @@ class stock_opname_memory(osv.osv_memory):
 			'view_id': False,
 			'type': 'ir.actions.act_window',
 			'target': 'new',
-		}
+		}	
 	
 class stock_opname_memory_line(osv.osv_memory):
 	_inherit = "stock.opname.memory.line"

@@ -4,7 +4,6 @@ SALES_SOUND_IDX = 0
 PURCHASE_SOUND_IDX = 2
 PRODUCT_SOUND_IDX = 1
 
-"""
 class stock_inventory(osv.osv):
 	_inherit = 'stock.inventory'
 
@@ -53,4 +52,3 @@ class stock_inventory(osv.osv):
 					}
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		return result
-"""
