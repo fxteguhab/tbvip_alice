@@ -16,7 +16,6 @@ class product_template(osv.osv):
 	#@api.one
 	#@api.depends('qty_available')
 	def _calculate_recommended_qty(self, cr, uid, ids, field_name, arg, context):
-	#def _calculate_recommended_qty(self):
 		result = {}
 		min_qty = 0
 		max_qty = 0
@@ -145,7 +144,7 @@ class product_template(osv.osv):
 				self.write(cr, uid, template.id, {
 				'min_qty': min_stock if template.min_qty == 0 else template.min_qty,
 				'max_qty': max_qty,
-				'overstock_koef' : template.qty_available / max_qty if max_qty > 0 else template.qty_available 
+				'overstock_koef' : (template.qty_available / rec_stock) * 100 if rec_stock > 0 else (template.qty_available * 100)
 				}, context=context)
 
 		return result
@@ -154,8 +153,8 @@ class product_template(osv.osv):
 	_columns = {
 		'base_margin_string': fields.char('Expected Margin'),	
 		'base_margin_amount': fields.float('Expected Margin Amount', group_operator="avg"),
-		'real_margin' : fields.float('Real Margin Amount', compute="_compute_real_margin", group_operator="avg", readonly="True",store="True"),
-		'real_margin_percentage' : fields.float('Real Margin %', compute="_compute_real_margin", group_operator="avg",store="True"),
+		'real_margin' : fields.float('Margin', compute="_compute_real_margin", group_operator="avg", readonly="True",store="True"),
+		'real_margin_percentage' : fields.float('Margin %', compute="_compute_real_margin", group_operator="avg",store="True"),
 		#'recommended_sale' : fields.float('Recommended Sale Price',compute="_compute_recommended_sale", store="True"),
 		'sale_notification' : fields.boolean('Sale Notification'),
 		'purchase_notification' : fields.boolean('Purchase Notification'),
