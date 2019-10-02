@@ -27,6 +27,7 @@ class account_invoice(osv.osv):
 		product_id = context.get('product_id',0)
 		origin = context.get('origin','')
 		categ_id = context.get('categ_id','')
+		bon_number = context.get('bon_number','')
 
 		buy_price_unit_nett = 0
 		buy_price_unit_nett_old = 0
@@ -47,7 +48,6 @@ class account_invoice(osv.osv):
 			buy_price_unit_nett = context.get('price_unit_nett',0)
 			buy_price_unit_old = context.get('price_unit_old',0)
 			buy_price_unit_nett_old = context.get('price_unit_nett_old',0)
-			buy_price_type_id = context.get('price_type_id',0)
 			sell_price_unit = context.get('sell_price_unit',0)
 			sell_price_unit_nett = sell_price_unit
 			sell_price_unit_nett_old = sell_price_unit
@@ -61,7 +61,7 @@ class account_invoice(osv.osv):
 			buy_price_unit_nett = buy_price_unit
 			buy_price_unit_nett_old = buy_price_unit_nett
 			
-		
+		price_type_id = context.get('price_type_id',0)
 		buy_price = buy_price_unit_nett if buy_price_unit_nett > 0 else 1
 		
 		margin = sell_price_unit_nett - buy_price_unit_nett
@@ -82,6 +82,14 @@ class account_invoice(osv.osv):
 			]
 		alice = user_obj.search(cr, uid, domain)
 		wuid = alice[0]
+
+		sale_order_obj = self.pool('sale.order')
+		sale_order_id = sale_order_obj.search(cr,uid,[('bon_number', '=', bon_number)], limit=1)
+		sale_order = sale_order_obj.browse(cr, uid, sale_order_id)
+
+		price_type_obj = self.pool('price.type')
+		price_type = price_type_obj.browse(cr, uid, price_type_id)
+
 		now = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')
 
 		#print "sell_price_unit_nett:"+str(sell_price_unit_nett)
@@ -102,7 +110,7 @@ class account_invoice(osv.osv):
 	
 			#Create new current buy price
 			product_current_price_obj.create(cr, wuid, {
-			'price_type_id': buy_price_type_id,
+			'price_type_id': price_type_id,
 			'product_id': product_id,
 			'start_date': now,
 			'partner_id': partner_id,
@@ -154,11 +162,11 @@ class account_invoice(osv.osv):
 					})	
 
 			#GANTI PROMO CAMPAIGN
-			if discount_string_old != discount_string:
+			if (str(discount_string_old) != str(discount_string)):
 				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
 				message_title = 'PURCHASE INVOICE PROMO ALERT'
 
-			#SUSUN NITIFICATION
+			#SUSUN NOTIFICATION
 			line_str += 'BUY NETT From '+ str("{:,.0f}".format(buy_price_unit_nett_old))+' to '+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'PARTNER:'+str(partner_name) +'\n'
 			line_str += 'ORIGIN:'+str(origin) +'\n'
@@ -196,7 +204,7 @@ class account_invoice(osv.osv):
 				message="ALICE : I'm changing %s sell price to %s" % (name,new_sell_price_unit)	
 				account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)
 				
-				sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
+				sell_price_type_id = price_type_id #self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
 				general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]
 
 				#Create new current sell price			
@@ -212,7 +220,7 @@ class account_invoice(osv.osv):
 				#send notif
 				message_title += 'CREATE NEW SELL PRICE FROM SELL INVOICE'
 				message_body += 'NAME:' + str(name) +'\n'
-
+				line_str = 'PRICE TYPE:' +str(price_type.name) +'\n'
 				line_str += 'SELL PRICE:'+ str("{:,.0f}".format(sell_price_unit))+' to '+str("{:,.0f}".format(new_sell_price_unit)) +'\n'
 				line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 				line_str += 'MARGIN:'+ str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%) to '+str("{:,.0f}".format(new_margin))+'('+str("{:,.2f}".format(new_percentage))+'%)' +'\n'
@@ -275,11 +283,14 @@ class account_invoice(osv.osv):
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		'''
 	
-		#ganti harga jual di bon jual ?!?!?!? notif doank ga ada rubah apa2, 
+		#ganti harga jual/salah jual di bon jual ?!?!?!? notif doank ga ada rubah apa2, 
 		if (invoice_type == 'out_invoice') and (round(sell_price_unit_old) != round(sell_price_unit)) and ('BASE' not in name) and (sell_price_unit > 0):
 			#send notif
-			message_title = 'SELL PRICE UNIT CHANGE (notif only)'
-			message_body = 'NAME:' + str(name) +'\n'
+			message_title = 'PRICE CHANGE IN SALES INVOICE'
+			message_body = 'PRODUCT:' + str(name) +'\n'
+			line_str += 'BON No:' +str(bon_number) +'\n'
+			line_str += 'EMPLOYEE:' +str(sale_order.employee_id.name_related) +'\n'
+			line_str = 'PRICE TYPE:'+str(price_type.name) +'\n'
 			line_str += 'PRICE From '+ str("{:,.0f}".format(sell_price_unit_old))+' to '+str("{:,.0f}".format(sell_price_unit)) +'\n'
 			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.2f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%)' +'\n'
