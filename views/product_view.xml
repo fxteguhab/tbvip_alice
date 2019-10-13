@@ -41,7 +41,8 @@
 		<record model="ir.ui.view" id="product_template_tree_inherit_inherit">
 			<field name="name">product.template.product.tree.inherit.inherit</field>
 			<field name="model">product.template</field>
-			<field name="inherit_id" ref="product.product_template_tree_view"/>
+			<!--<field name="inherit_id" ref="product.product_template_tree_view"/>-->
+			<field name="inherit_id" ref="tbvip.product_template_tree_inherit"/>
 			<field name="arch" type="xml">
 				<field name="product_current_stock" position ="after">
 					<field name ="recommended_qty" />
