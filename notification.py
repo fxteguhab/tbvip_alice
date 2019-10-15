@@ -3,14 +3,14 @@ from datetime import datetime
 from datetime import timedelta
 import os.path
 
-try:
-	from pyfcm import FCMNotification
-	import firebase_admin
-	from firebase_admin import credentials
-	from firebase_admin import firestore
-	has_notification_lib = True
-except:
-	has_notification_lib = False
+#try:
+from pyfcm import FCMNotification
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+has_notification_lib = True
+#except:
+	#has_notification_lib = False
 
 # ==========================================================================================================================
 SALES_SOUND_IDX = 0
@@ -38,16 +38,14 @@ class tbvip_fcm_notif(osv.osv):
 	#init Firestore DB	
 
 	if has_notification_lib:
-		print "has lib"
 		if  os.path.isfile(LOCAL_CRED):
 			cred = credentials.Certificate(LOCAL_CRED)
 			firebase_admin.initialize_app(cred)
 		else:
 			cred = credentials.ApplicationDefault()
 			firebase_admin.initialize_app(cred, {'projectId': 'awesome-beaker-150403',})
-	else:
-		cred = None
-		print "no lib"
+	#else:
+	#	cred = None
 
 	def send_notification(self,cr,uid,message_title,message_body,context={}): #context : is_stored,branch,category,sound_idx,lines,alert
 		if not has_notification_lib: return
