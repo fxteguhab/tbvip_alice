@@ -16,7 +16,7 @@ except:
 SALES_SOUND_IDX = 0
 PURCHASE_SOUND_IDX = 2
 PRODUCT_SOUND_IDX = 1
-LOCAL_CRED = 'tokobesiVIP-ade097b8b6e5.json'
+LOCAL_CRED = '/opt/odoo/tokobesiVIP-ade097b8b6e5.json'
 
 class tbvip_fcm_notif(osv.osv):
 	_name = 'tbvip.fcm_notif'
