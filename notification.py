@@ -38,6 +38,7 @@ class tbvip_fcm_notif(osv.osv):
 	#init Firestore DB	
 
 	if has_notification_lib:
+		print "has lib"
 		if  os.path.isfile(LOCAL_CRED):
 			cred = credentials.Certificate(LOCAL_CRED)
 			firebase_admin.initialize_app(cred)
@@ -46,6 +47,7 @@ class tbvip_fcm_notif(osv.osv):
 			firebase_admin.initialize_app(cred, {'projectId': 'awesome-beaker-150403',})
 	else:
 		cred = None
+		print "no lib"
 
 	def send_notification(self,cr,uid,message_title,message_body,context={}): #context : is_stored,branch,category,sound_idx,lines,alert
 		if not has_notification_lib: return
