@@ -19,6 +19,7 @@
 	'views/product_view.xml',
 	'views/purchase_needs_view.xml',
 	'views/hr_view.xml',
+	'cron/tbvip_alice_cron.xml',
 	],
 	'installable': True,
 	'auto_install': False,
