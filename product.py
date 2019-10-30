@@ -99,12 +99,12 @@ class product_template(osv.osv):
 					stock_limit = ((float(weight)/float(jml_data)) * delta_stock) + min_stock
 					rec_stock = math.ceil(stock_limit)
 					
-					print "min_qty : "+str(min_stock)
-					print "max_qty : "+str(max_stock)
-					print "rec_stock : "+str(rec_stock)
+					#print "min_qty : "+str(min_stock)
+					#print "max_qty : "+str(max_stock)
+					#print "rec_stock : "+str(rec_stock)
 					#print "stock_limit: "+str(stock_limit)
-					print "template.id: "+str(template.id)
-					print "template.name: "+str(template.name)
+					#print "template.id: "+str(template.id)
+					#print "template.name: "+str(template.name)
 
 					self.write(cr, uid, templates, {
 					'min_qty': min_stock,# if template.min_qty == 0 else template.min_qty,
@@ -116,7 +116,7 @@ class product_template(osv.osv):
 	#@api.multi
 	#@api.depends('qty_available','min_qty','max_qty')
 	#def _calculate_recommended_qty(self, cr, uid, ids, field_name, arg, context):
-	def calculate_recommended_qty(self, cr, uid,ids,context={}):
+	def _calculate_recommended_qty(self, cr, uid,ids,context={}):
 		result = {}
 		min_qty = 0
 		max_qty = 0
