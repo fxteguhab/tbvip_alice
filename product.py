@@ -1,6 +1,6 @@
 from openerp.osv import osv, fields
 from openerp import api
-from datetime import datetime
+from datetime import datetime, timedelta
 import margin_utility
 import math
 
@@ -13,12 +13,114 @@ class product_template(osv.osv):
 
 	_max_discount = 3
 
-	#@api.one
-	#@api.depends('qty_available')
-	def _calculate_recommended_qty(self, cr, uid, ids, field_name, arg, context):
+	def cron_calc_recommended_qty(self, cr, uid, context=None):
+		all_product_ids = self.search(cr, uid, [('active', '=', True)], context=context)	
+		for templates in all_product_ids:
+			template = self.browse(cr,uid, templates,context=context)
+			min_qty = 0
+			max_qty = 0
+			if len(template.product_variant_ids) > 0:
+				variant = template.product_variant_ids[0]	
+				if (variant):
+					today = datetime.now() 
+					current_year = today.year
+					current_month = today.month
+					data_years = 4 # mundur 4 tahun ke belakang. mungkin ini bisa diganti dengan config parameter?
+					max_coeff = 2 # same: config parameter?
+					sale_matrix = {}
+					for year in range(current_year-data_years,current_year+1):
+						sale_matrix[year] = {
+							'year': year,
+						# kenapa 0 s/d 14?
+						# monthly_qty akan berisi qty sale bulanan di tahun itu. Index 0 adalah utk des tahun sebelumnya,
+						# index 1 s/d 12 adalah untuk tahun itu, index 13 adalah untuk jan tahun depannya. 
+							'monthly_qty': [0 for i in range(0,14)],
+							'avg': 0,
+							'weekly_avg': 0,
+						}
+					months1970_to = ((current_year - 1) - 1970) * 12 + 13
+					months1970_from = ((current_year - data_years) - 1970) * 12
+					
+					#dibuang filed branch nya spy terambil data semua cabang sekaligus
+					cr.execute("""
+						SELECT * FROM sale_history 
+						WHERE 
+							product_id = %s AND months1970 BETWEEN %s AND %s
+						""" % (variant.id,months1970_from,months1970_to))
+				# bikin matrix berisi penjualan per bulan dan rerata bulanan dan mingguan, dipisah per tahun
+					for row in cr.dictfetchall():
+						year = int(row['period'][0:4])
+						month = int(row['period'][4:])
+						sale_matrix[year]['monthly_qty'][month] += row['sale_qty']
+				# hitung rerata bulanan dan minggun
+					for year in sale_matrix:
+						qty_sum = 0
+					# range(1,13): jumlahkan hanya monthly_qty tahun ybs. index 0 dan 13 ditinggal dulu karena itu
+					# bukan punya tahun yang ini
+						for month in range(1,13): qty_sum += sale_matrix[year]['monthly_qty'][month]
+						active_month = 0
+						for month in range(1,13):
+							if ((year < current_year) or (month <= current_month)) and (sale_matrix[year]['monthly_qty'][month] > 0): active_month+=1
+						if active_month == 0: active_month = 1
+							
+						sale_matrix[year]['avg'] = qty_sum / active_month #12.0
+						sale_matrix[year]['weekly_avg'] = int(math.ceil(sale_matrix[year]['avg'] / 4.0))
+				# set "carry" monthly_qty: index 0 untuk des tahun sebelumnya, index 13 utk jan tahun sesudahnya
+					for year in sale_matrix:
+						if (year-1) in sale_matrix:
+							sale_matrix[year]['monthly_qty'][0] = sale_matrix[year-1]['monthly_qty'][12]
+						if (year+1) in sale_matrix:
+							sale_matrix[year]['monthly_qty'][13] = sale_matrix[year+1]['monthly_qty'][1]
+				# hapus entry year yang avg nya 0, artinya di tahun itu ngga ada sale sama sekali
+					delete_years = []
+					for year in sale_matrix:
+						if sale_matrix[year]['avg'] <= 0: delete_years.append(year)
+					for year in delete_years: sale_matrix.pop(year)
+
+				# hitung weight
+					weight = 0
+					weekly_qty = [] # numpang biar cuman 1 for :D
+					for year in sale_matrix:
+						if year == current_year: continue # skip tahun ini karena dia masih ada di matrix
+						weekly_qty.append(sale_matrix[year]['weekly_avg'])
+						year_avg = sale_matrix[year]['avg']
+						if sale_matrix[year]['monthly_qty'][current_month-1] > year_avg: weight += 1
+						if sale_matrix[year]['monthly_qty'][current_month] > year_avg: weight += 1
+						if sale_matrix[year]['monthly_qty'][current_month+1] > year_avg: weight += 1
+
+				# masukkan rumus untuk hitung kebutuhan
+					jml_data = len(weekly_qty) * 3 # jumlah elemen weekly_qty diasumsikan idem tahun. 3 adalah current month +/- 1 
+					min_stock = float(sum(weekly_qty)) / max(len(weekly_qty), 1)
+					
+					if len(weekly_qty) == 0: weekly_qty = [0]
+					max_stock = max_coeff * max(weekly_qty)
+					delta_stock = max_stock - min_stock
+					if jml_data == 0: jml_data = 1
+					stock_limit = ((float(weight)/float(jml_data)) * delta_stock) + min_stock
+					rec_stock = math.ceil(stock_limit)
+					
+					print "min_qty : "+str(min_stock)
+					print "max_qty : "+str(max_stock)
+					print "rec_stock : "+str(rec_stock)
+					#print "stock_limit: "+str(stock_limit)
+					print "template.id: "+str(template.id)
+					print "template.name: "+str(template.name)
+
+					self.write(cr, uid, templates, {
+					'min_qty': min_stock,# if template.min_qty == 0 else template.min_qty,
+					'max_qty': max_stock,# if template.max_qty == 0 else template.max_qty,
+					'recommended_qty': rec_stock,
+					'overstock_koef' : (template.qty_available / rec_stock) if rec_stock > 0 else (template.qty_available)
+					}, context=context)			
+
+	#@api.multi
+	#@api.depends('qty_available','min_qty','max_qty')
+	#def _calculate_recommended_qty(self, cr, uid, ids, field_name, arg, context):
+	def calculate_recommended_qty(self, cr, uid,ids,context={}):
 		result = {}
 		min_qty = 0
 		max_qty = 0
+		#product_obj = self.pool.get('product.template')
 		for template in self.browse(cr, uid, ids, context):
 			#cr = template.env.cr
 			#uid = template.env.user.id
@@ -132,21 +234,24 @@ class product_template(osv.osv):
 					rec_stock = math.ceil(stock_limit)
 
 					#print "weekly_qty : "+str(weekly_qty)
-					#print "min_qty : "+str(min_stock)
-					#print "max_qty : "+str(max_stock)
+					print "min_qty : "+str(min_stock)
+					print "max_qty : "+str(max_stock)
+					print "rec_stock : "+str(rec_stock)
 					#print "stock_limit: "+str(stock_limit)
-					#print "template.id: "+str(template.id)
+					print "template.id: "+str(template.id)
+					print "ids:"+str(ids)
 					#print "=================="
 
 					result[template.id] = rec_stock
-					max_qty = max_stock if template.max_qty == 0 else template.max_qty
-				
+									
 				self.write(cr, uid, template.id, {
-				'min_qty': min_stock if template.min_qty == 0 else template.min_qty,
-				'max_qty': max_qty,
-				'overstock_koef' : (template.qty_available / rec_stock) * 100 if rec_stock > 0 else (template.qty_available * 100)
+				'min_qty': min_stock,# if template.min_qty == 0 else template.min_qty,
+				'max_qty': max_stock,# if template.max_qty == 0 else template.max_qty,
+				'recommended_qty': rec_stock,
+				'overstock_koef' : (template.qty_available / rec_stock) if rec_stock > 0 else (template.qty_available)
 				}, context=context)
-
+				
+				self.recommended_qty = rec_stock
 		return result
 
 
@@ -158,19 +263,17 @@ class product_template(osv.osv):
 		#'recommended_sale' : fields.float('Recommended Sale Price',compute="_compute_recommended_sale", store="True"),
 		'sale_notification' : fields.boolean('Sale Notification'),
 		'purchase_notification' : fields.boolean('Purchase Notification'),
-		
-		'recommended_qty' : fields.function(_calculate_recommended_qty, type="float", string="Rec Qty", group_operator="avg"),
-		'min_qty': fields.float("Min Qty", group_operator="avg"),
-		'max_qty': fields.float("Max Qty", group_operator="avg"),
-		'overstock_koef' : fields.float("Overstock Koef"),
+		 
+
+		#'recommended_qty' : fields.float(calculate='_calculate_recommended_qty',string="Rec Qty", group_operator="avg", store=True),
+		'recommended_qty' : fields.float("Recommended Qty"),
+		'overstock_koef' : fields.float("Stock/Rec Koef"),
 		'auto_so': fields.boolean('Allow SO', help="Allow to be included in auto generated stock opname"),
 	}
 
 	_defaults = {
 		'base_margin_string': '0',
 		'base_margin_amount': 0,
-		'min_qty' : 0,
-		'max_qty' : 0,
 		'auto_so' : True,
 	}
 
