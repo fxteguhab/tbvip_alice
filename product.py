@@ -110,7 +110,9 @@ class product_template(osv.osv):
 					'min_qty': min_stock,# if template.min_qty == 0 else template.min_qty,
 					'max_qty': max_stock,# if template.max_qty == 0 else template.max_qty,
 					'recommended_qty': rec_stock,
-					'overstock_koef' : (template.qty_available / rec_stock) if rec_stock > 0 else (template.qty_available)
+					'overstock_koef' : (template.qty_available / rec_stock) if rec_stock > 0 else (template.qty_available),
+					'is_stock_exhausted' : template.qty_available < template.min_qty,
+					'is_stock_overstock' : template.qty_available > template.max_qty
 					}, context=context)			
 
 	#@api.multi
@@ -248,7 +250,9 @@ class product_template(osv.osv):
 				'min_qty': min_stock,# if template.min_qty == 0 else template.min_qty,
 				'max_qty': max_stock,# if template.max_qty == 0 else template.max_qty,
 				'recommended_qty': rec_stock,
-				'overstock_koef' : (template.qty_available / rec_stock) if rec_stock > 0 else (template.qty_available)
+				'overstock_koef' : (template.qty_available / rec_stock) if rec_stock > 0 else (template.qty_available),
+				'is_stock_exhausted' : template.qty_available < template.min_qty,
+				'is_stock_overstock' : template.qty_available > template.max_qty
 				}, context=context)
 				
 				self.recommended_qty = rec_stock
