@@ -13,10 +13,12 @@ class stock_opname_memory(osv.osv_memory):
 	
 	_columns = {
 		'allow_so': fields.related('employee_id', 'allow_so', type="boolean", string="allow_so"),
+		'branch_id': fields.many2one('tbvip.branch', 'Branch'),
 	}
 
 	_defaults = {
 		'location_id': lambda self, cr, uid, ctx: self.pool.get('res.users').browse(cr, uid, uid, ctx).branch_id.default_stock_location_id.id,
+		'branch_id': lambda self, cr, uid, ctx: self.pool.get('res.users').browse(cr, uid, uid, ctx).branch_id.id,
 	}
 	
 	def action_generate_stock_opname(self, cr, uid, ids, context=None):

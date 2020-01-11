@@ -20,6 +20,10 @@
 				<field name="location_id" position="attributes">
 					<attribute name="on_change">none</attribute>
 				</field>
+				<field name="location_id" position="after">
+					<field name ="branch_id" readonly="1"/>
+					<field name="name" />
+				</field>
 				<field name="create_uid" position="after">
 					<button name="action_load_inventories" type="object" string="Load Inventories" colspan="2" invisible="context.get('is_override',True)" />
 					<!--<button name="onchange_location_and_employee(location_id, rule_id, employee_id)" string="Load Inventories" colspan="2"/>-->

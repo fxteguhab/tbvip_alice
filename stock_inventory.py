@@ -28,7 +28,7 @@ class stock_inventory(osv.osv):
 			old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
 			percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
 			# create SO inject & notif, later create penalty
-			if percentage > 50:
+			if percentage > 75:
 				#create inject
 				stock_opname_inject.create(cr,wuid, {
 					'location_id': inventory.location_id.id,
