@@ -66,7 +66,7 @@ class tbvip_fcm_notif(osv.osv):
 			
 			#push notification
 			push_service.notify_topic_subscribers(topic_name=notification_topic, message_title=message_title,message_body=message_body, sound=sound)
-
+	
 			if context.get('is_stored',True):
 				branch = context.get('branch','VIP')
 				category = context.get('category','BASE')
@@ -75,7 +75,7 @@ class tbvip_fcm_notif(osv.osv):
 				#now = datetime.now()
 				alert = context.get('alert','!')
 				db = firestore.client()
-				doc_ref = db.collection(u'notification').document()
+				doc_ref = db.collection(unicode(notification_topic)).document()
 				doc_ref.set({
 					u'branch':unicode(branch),
 					u'category':unicode(category),

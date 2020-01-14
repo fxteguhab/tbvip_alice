@@ -18,6 +18,14 @@ class stock_inventory(osv.osv):
 		wuid = alice[0]
 		stock_opname_inject = self.pool.get('stock.opname.inject')
 
+		param_obj = self.pool.get('ir.config_parameter')
+		param_ids = param_obj.search(cr, uid, [('key','in',['so_limit_koef'])])
+		
+		so_limit_koef = -1.0 #default : 75
+		for param_data in param_obj.browse(cr, uid, param_ids):
+			if param_data.key == 'so_limit_koef':
+				so_limit_koef = float(param_data.value)
+
 
 		row_total_qty = 0
 		inventory = self.browse(cr, uid, ids, context=context)
@@ -27,8 +35,9 @@ class stock_inventory(osv.osv):
 			delta_old_and_new_total_qty_line = abs(selisih)
 			old_qty = line.theoretical_qty if line.theoretical_qty > 0 else 1
 			percentage = (delta_old_and_new_total_qty_line/old_qty) * 100
+
 			# create SO inject & notif, later create penalty
-			if percentage > 75:
+			if (so_limit_koef >= 0) and (percentage > so_limit_koef):
 				#create inject
 				stock_opname_inject.create(cr,wuid, {
 					'location_id': inventory.location_id.id,
@@ -38,7 +47,7 @@ class stock_inventory(osv.osv):
 					'domain':'not',
 					'employee_id': inventory.employee_id.id,
 				})
-
+				
 				#send notif
 				message_title = 'SO('+str(line.product_id.name_template)+')::'+str(inventory.location_id.name)	
 				message_body = 'DELTA:'+str(selisih)+'('+str(percentage)+'%)'+'\n'+'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)
