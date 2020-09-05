@@ -149,7 +149,7 @@ class purchase_order(osv.osv):
 		current_year = purchase_date.year
 		current_month = purchase_date.month
 		data_years = 4 # mundur 4 tahun ke belakang. mungkin ini bisa diganti dengan config parameter?
-		max_coeff = 2 # same: config parameter?
+		max_coeff = 1.6 # same: config parameter?
 	# persiapkan matrix sale qty
 		sale_matrix = {}
 		for year in range(current_year-data_years,current_year+1):
@@ -196,7 +196,7 @@ class purchase_order(osv.osv):
 		# bukan punya tahun yang ini
 			for month in range(1,13): qty_sum += sale_matrix[year]['monthly_qty'][month]
 			sale_matrix[year]['avg'] = qty_sum / 12.0
-			sale_matrix[year]['weekly_avg'] = int(round(sale_matrix[year]['avg'] / 4.0))
+			sale_matrix[year]['weekly_avg'] = int(round(sale_matrix[year]['avg'] / 4.0)) #dibagi 4 jadi weekly
 	# set "carry" monthly_qty: index 0 untuk des tahun sebelumnya, index 13 utk jan tahun sesudahnya
 		for year in sale_matrix:
 			if (year-1) in sale_matrix:

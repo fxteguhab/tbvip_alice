@@ -45,7 +45,7 @@
 			<field name="arch" type="xml">
 				<field name="product_current_stock" position ="after">
 					<field name ="recommended_qty" />
-					<field name ="overstock_koef" />
+					<field name ="month_avg_sell" />
 					<field name ="real_margin" groups="tbvip.group_management_central"/>
 					<field name ="real_margin_percentage" groups="tbvip.group_management_central"/>
 				</field>
@@ -109,8 +109,8 @@
 			<field name="inherit_id" ref="stock.view_template_property_form"/>
 			<field name="arch" type="xml">
 				<field name="virtual_available" position="after">
-					<field name ="recommended_qty" string="Recommended Qty"/>
-					<field name ="overstock_koef" readonly="True"/>
+					<field name ="recommended_qty"/>
+					<field name ="month_avg_sell" readonly="True"/>
 					<field name ="auto_so" />
 				</field>
 			</field>
