@@ -14,6 +14,7 @@ class product_template(osv.osv):
 	_max_discount = 3
 
 	def cron_calc_recommended_qty(self, cr, uid, context=None):
+		print "Start Compute Recommended QTY"
 		today = datetime.now() 
 		last_month = today - timedelta(days=30)	
 		product_product_obj = self.pool.get('product.product')
@@ -130,7 +131,8 @@ class product_template(osv.osv):
 				'is_stock_overstock' : variant.product_tmpl_id.qty_available > variant.product_tmpl_id.max_qty,
 				'month_avg_sell': years_avg,
 				}, context=context)		
-
+				print "Stop Compute Recommended QTY"
+				print "Start Compute Reordering RULES"
 
 				#create auto reordering rule
 				order_point_obj = self.pool['stock.warehouse.orderpoint']
@@ -148,6 +150,7 @@ class product_template(osv.osv):
 				'product_uom': variant.product_tmpl_id.multiple_purchase_qty,
 				}
 				order_point_obj.create(cr, uid, order_vals, context=context)
+				print "Stop Compute Reordering RULES"
 				
 #---------------------------------------------------------------------------------------------------------------------------------------------		
 	_columns = {

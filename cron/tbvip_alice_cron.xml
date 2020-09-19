@@ -14,7 +14,7 @@
 			<field eval="" name="args" />
 		</record>
 
-		<record forcecreate="True" id="ir_cron_calc_recommended_qty" model="ir.cron">
+		<record forcecreate="True" id="ir_cron_calc_product_qty_sold" model="ir.cron">
 			<field name="name">Calculate Product Qty Sold</field>
 			<field eval="True" name="active" />
 			<field name="user_id" ref="base.user_root" />

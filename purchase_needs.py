@@ -47,6 +47,7 @@ class sale_history(osv.Model):
 	# november 2018 (pakai dari tanggal 1 s/d 30). Hal ini karena transaksi2 bulan ini bisa jadi 
 	# masih volatile alias bisa diedit dsb. asumsinya pengeditan trx bulan lalu relatif hampir ngga
 	# ada sehingga isi tabel sale_history relatif valid.
+		print "Start Compute Monthly SOLD"
 		end_time = datetime(year,month,1)
 		start_time = end_time + relativedelta(months=-1)
 		end_time = end_time + relativedelta(seconds=-1)
@@ -91,6 +92,7 @@ class sale_history(osv.Model):
 					'months1970': months1970,
 					'sale_qty': row['qty_total']
 					})
+		print "End Compute Monthly SOLD"
 
 # CRON ---------------------------------------------------------------------------------------------------------------------
 	
