@@ -107,7 +107,7 @@ class sale_history(osv.Model):
 	# 20190106: jalankan method ini untuk menginisialisasi isi tabel sale history
 	# setelah dijalankan, method ini mau dihapus juga gapapa
 		first_year = 2018 # awal program dijalankan & data benar diinput
-		last_year = 2019 # sampe tahun ini
+		last_year = datetime.now().year #2020 # sampe tahun ini
 		branch_ids = self.pool.get('tbvip.branch').search(cr, uid, [])
 		cr.execute("DELETE FROM sale_history")
 		for year in range(first_year,last_year+1):
@@ -302,7 +302,7 @@ class purchase_order(osv.osv):
 			products = product_obj.browse(cr, uid, product_id)[0]
 			wh_qty = products.qty_available
 			uom_id = products.uom_po_id.id #unit of measurement for purchase
-			qty_minimum = products.minimum_purchase_qty
+			qty_minimum = products.min_qty #products.minimum_purchase_qty
 			qty_multiple = products.multiple_purchase_qty
 			if (qty_multiple <= 0):	qty_multiple = 1
 			if (qty_minimum <= 0):	qty_minimum = 1

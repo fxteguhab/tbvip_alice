@@ -17,10 +17,10 @@
 					</page>
 				</notebook>
 				<field name="uom_po_id" position="after">
-					<field name="seller_id" />
-					<field name="minimum_purchase_qty" />
-					<field name="maximum_purchase_qty" />
 					<field name="multiple_purchase_qty" />
+					<field name="seller_id" readonly="True"/>
+					<!--<field name="minimum_purchase_qty" />-->
+					<!--<field name="maximum_purchase_qty" />-->				
 				</field>
 			</field>
 		</record>
@@ -106,13 +106,17 @@
 		<record id="view_template_property_form_inherit_inherit_inherit" model="ir.ui.view">
 			<field name="name">product.template.stock.property.form.inherit.inherit.inherit</field>
 			<field name="model">product.template</field>
-			<field name="inherit_id" ref="stock.view_template_property_form"/>
+			<field name="inherit_id" ref="tbvip.view_template_property_form_inherit_inherit_inherit"/>
 			<field name="arch" type="xml">
-				<field name="virtual_available" position="after">
+				<group string="Stock Quantity Recommendation" position="inside">
 					<field name ="recommended_qty"/>
 					<field name ="month_avg_sell" readonly="True"/>
-					<field name ="auto_so" />
-				</field>
+				</group>
+				<group string="Stock Quantity Recommendation" position="after">
+					<group string="Stock Opname Configuration">
+								<field name ="auto_so" />
+					</group>
+				</group>				
 			</field>
 		</record>
 
