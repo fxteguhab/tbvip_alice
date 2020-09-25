@@ -223,6 +223,7 @@ class purchase_order(osv.osv):
 			#print sale_matrix[year]
 
 	# hitung weight
+		years_avg = 0.0
 		weight = 0
 		weekly_qty = [] # numpang biar cuman 1 for :D
 		for year in sale_matrix:
@@ -233,6 +234,8 @@ class purchase_order(osv.osv):
 			if sale_matrix[year]['monthly_qty'][current_month-1] > year_avg: weight += 1
 			if sale_matrix[year]['monthly_qty'][current_month] > year_avg: weight += 1
 			if sale_matrix[year]['monthly_qty'][current_month+1] > year_avg: weight += 1
+			years_avg += year_avg
+		years_avg = years_avg / float(data_years)
 		#print "weight: %s" % weight
 		#print "=================="
 
@@ -245,6 +248,10 @@ class purchase_order(osv.osv):
 		delta_stock = max_stock - min_stock
 		if jml_data == 0: jml_data = 1
 		stock_limit = ((float(weight)/float(jml_data)) * delta_stock) + min_stock
+		if (years_avg > 0):
+			rec_stock = math.ceil(stock_limit)
+		else:
+			rec_stock = 0
 		#print "jml_data: %s, min_stock: %s, max_stock: %s, delta_stock: %s, stock_limit: %s" % (jml_data, min_stock, max_stock, delta_stock, stock_limit)
 	# ambil current_stock di lokasi cabang
 		'''
@@ -268,8 +275,8 @@ class purchase_order(osv.osv):
 		else:
 			current_qty = 0
 	# tentukan berapa kebutuhan
-		if current_qty < stock_limit:
-			return round(stock_limit - max(current_qty,0)) # perlukan di-round?
+		if current_qty < rec_stock:
+			return round(rec_stock - max(current_qty,0)) # perlukan di-round?
 		else:
 			return 0
 

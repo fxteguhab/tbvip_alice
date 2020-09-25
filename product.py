@@ -15,22 +15,75 @@ class product_template(osv.osv):
 
 	_max_discount = 3
 
-	def cron_calc_recommended_qty(self, cr, uid, context=None):
-		_logger.info("Start Compute Recommended QTY")
+	def create(self, cr, uid, vals, context={}):
+		new_id = super(product_template, self).create(cr, uid, vals, context)
+		name = ''
+		#for product in self.browse(cr, uid, new_id, context=context):
+		product = self.browse(cr, uid, new_id, context=context)
+		name = product.name
+		create_by = product.create_uid.name
 
+		message_title = 'NEW ITEM CREATION'
+		message_body = 'NAME:'+str(name) +'\n'+'Created by :' +str(create_by)
+		context = {
+				'category':'PRODUCT',
+				'sound_idx':PRODUCT_SOUND_IDX,
+				}
+		self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+
+		return new_id
+
+	def maintenance_calc_multiple_purchase_qty(self, cr, uid, context={}):
+		product_templates = self.pool.get('product.template').search(cr, uid, [])
+		self.action_calc_multiple_purchase_qty(cr, uid, product_templates, context=context)
+
+	def action_calc_multiple_purchase_qty(self, cr, uid, ids, context=None):
+		invoice_line_obj = self.pool.get('account.invoice.line')
+		product_templates = self.browse(cr, uid, ids)
+		product_product_obj = self.pool.get('product.product').search
 		today = datetime.now() 
-		last_month = today - timedelta(days=30)	
-		product_product_obj = self.pool.get('product.product')
+		last_year = today - timedelta(days=365)	
+		min_qty = 1
+		for product in product_templates:
+			variant = product.product_variant_ids[0]
+			cr.execute("""
+				SELECT MIN(quantity) as min_qty FROM account_invoice_line
+				WHERE product_id = '%s' AND price_subtotal > 0 AND create_date > '%s' 
+				AND  purchase_line_id > 0
+				""" % (variant.id,last_year))			
+			row = cr.dictfetchone()
+			if row: min_qty = row.get('min_qty', 1)
+
+			#product.multiple_purchase_qty = min_qty
+			if min_qty <=0:min_qty=1
+			self.write(cr, uid, product.id, {
+				'multiple_purchase_qty': min_qty,			
+				}, context=context)	
+			#print "product:"+str(product.name)
+			#print "min_qty:"+str(product.multiple_purchase_qty)
+
+	def cron_calc_recommended_qty(self, cr, uid, context=None):
+		today = datetime.now() 
+		last_month = today - timedelta(days=30)	 
 		cr.execute("""
 					SELECT DISTINCT product_id FROM sale_order_line
 					WHERE create_date BETWEEN '%s' AND  '%s'
 					""" % (last_month.strftime('%Y-%m-%d'),today.strftime('%Y-%m-%d')))
-		
 		product_ids = []
 		for row in cr.dictfetchall():
 			product_ids.append(row['product_id'])	
-		product_product = product_product_obj.browse(cr, uid, product_ids)
 
+		product_product = self.pool.get('product.product').browse(cr, uid, product_ids)	
+		for product in product_product:	
+			self.action_calc_recommended_qty(cr, uid, product.product_tmpl_id.id, context=context)
+
+	def action_calc_recommended_qty(self, cr, uid, ids, context=None):
+		#_logger.info("Start Compute Recommended QTY")
+
+		today = datetime.now() 
+		product_template_obj = self.pool.get('product.template')
+
+		product_product = product_template_obj.browse(cr, uid, ids).product_variant_ids
 		for variant in product_product:
 			min_qty = 0
 			max_qty = 0
@@ -114,8 +167,10 @@ class product_template(osv.osv):
 				delta_stock = max_stock - min_stock
 				if jml_data == 0: jml_data = 1
 				stock_limit = ((float(weight)/float(jml_data)) * delta_stock) + min_stock
-				rec_stock = math.ceil(stock_limit)
-				
+				if (years_avg > 0):
+					rec_stock = math.ceil(stock_limit)
+				else:
+					rec_stock = 0
 				#print "template.id: "+str(variant.product_tmpl_id.id)
 				#print "template.name: "+str(variant.name_template)
 				#print "min_qty : "+str(min_stock)
@@ -134,8 +189,8 @@ class product_template(osv.osv):
 				'is_stock_overstock' : variant.product_tmpl_id.qty_available > variant.product_tmpl_id.max_qty,
 				'month_avg_sell': years_avg,
 				}, context=context)		
-				_logger.info("Stop Compute Recommended QTY")
-				_logger.info("Start Compute Reordering RULES")
+				#_logger.info("Stop Compute Recommended QTY")
+				#_logger.info("Start Compute Reordering RULES")
 
 				#create auto reordering rule
 				order_point_obj = self.pool['stock.warehouse.orderpoint']
@@ -148,12 +203,13 @@ class product_template(osv.osv):
 				'product_id':variant.id,
 				'product_min_qty': min_stock,
 				'product_max_qty': max_stock,
-				'qty_multiple' : 1.0,
+				'qty_multiple' : variant.product_tmpl_id.multiple_purchase_qty,
 				'active': True,
-				'product_uom': variant.product_tmpl_id.multiple_purchase_qty,
+				'product_uom': variant.product_tmpl_id.uom_po_id.id,
 				}
 				order_point_obj.create(cr, uid, order_vals, context=context)
-				_logger.info("Stop Compute Reordering RULES")
+				#_logger.info("Stop Compute Reordering RULES")
+		#_logger.info("Stop Compute Recommended QTY")
 				
 #---------------------------------------------------------------------------------------------------------------------------------------------		
 	_columns = {
@@ -169,7 +225,10 @@ class product_template(osv.osv):
 		'month_avg_sell' :  fields.float("AVG Sales/month"),
 		'recommended_qty' : fields.float("Rec Qty/2 weeks"),
 		'overstock_koef' : fields.float("Stock/Rec Koef"),
-		'auto_so': fields.boolean('Allow SO', help="Allow to be included in auto generated stock opname"),
+		'auto_so': fields.boolean('Allow Generate Stock Opname', help="Allow to be included in auto generated stock opname"),
+
+		'stock_qty_ideal': fields.float("Ideal Stock"),	
+		'stock_qty_verified': fields.boolean('Verified Stock'),	
 	}
 
 	_defaults = {
@@ -281,7 +340,7 @@ class product_template(osv.osv):
 			record.real_margin = real_margin
 			record.real_margin_percentage = percentage
 
-class product_template(osv.osv):
+class product_product(osv.osv):
 	_inherit = 'product.product'
 
 	_max_discount = 3

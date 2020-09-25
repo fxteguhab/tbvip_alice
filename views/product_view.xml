@@ -17,7 +17,11 @@
 					</page>
 				</notebook>
 				<field name="uom_po_id" position="after">
-					<field name="multiple_purchase_qty" />
+					<label for="multiple_purchase_qty"/>
+							<div>
+								<field name="multiple_purchase_qty" class="oe_inline"/>
+								<button name="action_calc_multiple_purchase_qty" string="⇒ Autocheck" type="object" class="oe_link"/>
+							</div>
 					<field name="seller_id" readonly="True"/>
 					<!--<field name="minimum_purchase_qty" />-->
 					<!--<field name="maximum_purchase_qty" />-->				
@@ -109,7 +113,11 @@
 			<field name="inherit_id" ref="tbvip.view_template_property_form_inherit_inherit_inherit"/>
 			<field name="arch" type="xml">
 				<group string="Stock Quantity Recommendation" position="inside">
-					<field name ="recommended_qty"/>
+					<label for="recommended_qty"/>
+							<div>
+								<field name="recommended_qty" class="oe_inline"/>
+								<button name="action_calc_recommended_qty" string="⇒ Calculate" type="object" class="oe_link"/>
+							</div>
 					<field name ="month_avg_sell" readonly="True"/>
 				</group>
 				<group string="Stock Quantity Recommendation" position="after">
