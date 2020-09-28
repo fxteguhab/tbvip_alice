@@ -62,6 +62,11 @@ class product_template(osv.osv):
 			#print "product:"+str(product.name)
 			#print "min_qty:"+str(product.multiple_purchase_qty)
 
+	def maintenance_calc_recommended_qty(self, cr, uid, context=None):
+		product_templates = self.browse(cr, uid, self.search(cr, uid, []))	#all product
+		for product in product_templates:	
+			self.action_calc_recommended_qty(cr, uid, product.id, context=context)
+
 	def cron_calc_recommended_qty(self, cr, uid, context=None):
 		today = datetime.now() 
 		last_month = today - timedelta(days=30)	 
@@ -171,15 +176,15 @@ class product_template(osv.osv):
 					rec_stock = math.ceil(stock_limit)
 				else:
 					rec_stock = 0
-				#print "template.id: "+str(variant.product_tmpl_id.id)
-				#print "template.name: "+str(variant.name_template)
+				print "template.id: "+str(variant.product_tmpl_id.id)
+				print "template.name: "+str(variant.name_template)
 				#print "min_qty : "+str(min_stock)
 				#print "max_qty : "+str(max_stock)
 				#print "rec_stock : "+str(rec_stock)
 				#print "stock_limit: "+str(stock_limit)
 
 				
-				#write hail calc
+				#write hasil calc
 				self.write(cr, uid, variant.product_tmpl_id.id, {
 				'min_qty': min_stock,# if template.min_qty == 0 else template.min_qty,
 				'max_qty': max_stock,# if template.max_qty == 0 else template.max_qty,
@@ -195,6 +200,8 @@ class product_template(osv.osv):
 				#create auto reordering rule
 				order_point_obj = self.pool['stock.warehouse.orderpoint']
 				order_point_ids=order_point_obj.search(cr,uid,[('product_id','=',variant.id)])
+				
+				#delete reorder rule lama
 				if order_point_ids:
 					order_point_obj.unlink(cr, uid, order_point_ids)
 				
