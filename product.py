@@ -176,8 +176,8 @@ class product_template(osv.osv):
 					rec_stock = math.ceil(stock_limit)
 				else:
 					rec_stock = 0
-				print "template.id: "+str(variant.product_tmpl_id.id)
-				print "template.name: "+str(variant.name_template)
+				#print "template.id: "+str(variant.product_tmpl_id.id)
+				#print "template.name: "+str(variant.name_template)
 				#print "min_qty : "+str(min_stock)
 				#print "max_qty : "+str(max_stock)
 				#print "rec_stock : "+str(rec_stock)
