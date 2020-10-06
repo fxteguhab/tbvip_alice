@@ -50,7 +50,6 @@ class sale_history(osv.Model):
 	# november 2018 (pakai dari tanggal 1 s/d 30). Hal ini karena transaksi2 bulan ini bisa jadi 
 	# masih volatile alias bisa diedit dsb. asumsinya pengeditan trx bulan lalu relatif hampir ngga
 	# ada sehingga isi tabel sale_history relatif valid.
-		_logger.info("Start Compute Monthly SOLD")
 		end_time = datetime(year,month,1)
 		start_time = end_time + relativedelta(months=-1)
 		end_time = end_time + relativedelta(seconds=-1)
@@ -87,15 +86,14 @@ class sale_history(osv.Model):
 			WHERE branch_id = %s AND period = '%s'
 			""" % (branch_id, period))
 		for row in sales:
-			if row['product_uom'] == 1: #sementara hanya ambil penjualan yg pcs, karena UoM masih konflik
+			if (row['product_uom'] == 1) and (row['product_id']): #sementara hanya ambil penjualan yg pcs, karena UoM masih konflik
 				self.create(cr, uid, {
 					'product_id': row['product_id'],
 					'branch_id': branch_id,
 					'period': period,
 					'months1970': months1970,
 					'sale_qty': row['qty_total']
-					})
-		_logger.info("End Compute Monthly SOLD")
+					})	
 
 # CRON ---------------------------------------------------------------------------------------------------------------------
 	
@@ -105,8 +103,10 @@ class sale_history(osv.Model):
 	# lebih dari satu bulan!
 		now = datetime.now()
 		#now = datetime(2018,9,5) # DEBUG! hapus sesudah selesai development
+		_logger.info("Start Compute Monthly SOLD")
 		for branch_id in self.pool.get('tbvip.branch').search(cr, uid, []):
 			self.compute_monthly_qty(cr, uid, now.month, now.year, branch_id, context=context)
+		_logger.info("End Compute Monthly SOLD")
 
 	def maintenance_first_fill_sale_history(self, cr, uid, context={}):
 	# 20190106: jalankan method ini untuk menginisialisasi isi tabel sale history
@@ -117,8 +117,10 @@ class sale_history(osv.Model):
 		cr.execute("DELETE FROM sale_history")
 		for year in range(first_year,last_year+1):
 			for month in range(1,13):
+				_logger.info("Start Compute Monthly SOLD")
 				for branch_id in branch_ids:
 					self.compute_monthly_qty(cr, uid, month, year, branch_id, context=context)
+				_logger.info("End Compute Monthly SOLD")
 
 # ===========================================================================================================================
 class product_template(osv.osv):
