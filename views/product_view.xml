@@ -85,7 +85,7 @@
 				
 				<field name="state" position ="before">
 					<field name = "sales_count"/>
-					<field name = "rank"/>
+					<field name = "ranking"/>
 					<!--<field name = "last_sale_delta"/>-->
 				</field>
 			</field>
