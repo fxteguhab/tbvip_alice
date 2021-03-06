@@ -32,7 +32,7 @@ class purchase_order(osv.osv):
 				product_watch = '[!!]'
 				product_name += product_watch
 
-			line_str += str(line.product_qty)+':'+product_name + '\n'+'     Stock:'+str(qty_available)+'\n'
+			line_str += str(line.product_qty)+':'+product_name + '\n'+'        Stock: '+str(qty_available)+'\n'
 				
 		if ((value >= purchase_limit) or (product_watch == '[!!]')):
 			alert = '!'

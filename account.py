@@ -133,12 +133,12 @@ class account_invoice(osv.osv):
 				#send notif to FCM
 				message_body = ''
 				line_str = ''
-				message_title = 'PURCHASE INVOICE ALERT'
+				message_title = 'NEW BUY PRICE'
 				message_body += 'NAME:' + str(name) +'\n'	
 
 			change_price = False
 			#GANTI HARGA PRICE LIST 
-			if round(buy_price_unit_old) != round(buy_price_unit):
+			if (round(buy_price_unit_old) != round(buy_price_unit)) and (buy_price_unit_old >0) and (buy_price_unit >0):
 				message_body += 'PLIST From '+ str("{:,.0f}".format(buy_price_unit_old))+' to '+str("{:,.0f}".format(buy_price_unit)) +'\n'
 
 				#if rugi or percentage < 1 then ganti harga jual
@@ -158,11 +158,11 @@ class account_invoice(osv.osv):
 						change_price = True	
 					
 					if (change_price):
-						message_title += ' & NEW SALE PRICE'
-						if (old_percentage >= 1):
+						message_title += ' => NEW SELL PRICE'
+						if (old_percentage >= 2):
 							delta = old_margin
 						else:
-							delta = (buy_price_unit_nett * 1 / 100) #1%
+							delta = (buy_price_unit_nett * 2 / 100) #2%
 
 						new_sell_price_unit = margin_utility.rounding_margin(buy_price_unit_nett + delta)
 						new_margin = new_sell_price_unit - buy_price_unit_nett
@@ -187,12 +187,12 @@ class account_invoice(osv.osv):
 			#GANTI PROMO CAMPAIGN
 			if (str(discount_string_old) != str(discount_string)):
 				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
-				message_title = 'PURCHASE INVOICE PROMO ALERT'
+				message_title = 'NEW BUY DISCOUNT'
 
 			#SUSUN NOTIFICATION
 			line_str += 'BUY NETT From '+ str("{:,.0f}".format(buy_price_unit_nett_old))+' to '+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'PARTNER:'+str(partner_name) +'\n'
-			line_str += 'ORIGIN:'+str(origin) +'\n'
+			#line_str += 'ORIGIN:'+str(origin) +'\n'
 			line_str += 'SELL PRICE:'+str("{:,.0f}".format(sell_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.2f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%)' +'\n'
 			
@@ -200,9 +200,9 @@ class account_invoice(osv.osv):
 				line_str += 'NEW SELL PRICE:'+str("{:,.0f}".format(new_sell_price_unit)) +'\n'
 				line_str += 'NEW MARGIN:'+str("{:,.0f}".format(new_margin))+'('+str("{:,.2f}".format(new_percentage))+'%)' +'\n'
 
-			message_body += line_str
+			#message_body += line_str
 			context = {
-				'category':'INVOICE',
+				'category':'PURCHASE',
 				'sound_idx':PURCHASE_SOUND_IDX,
 				'alert' : '!!!!!!!',
 				'lines' : line_str,
@@ -251,16 +251,18 @@ class account_invoice(osv.osv):
 					})	
 
 					#send notif
-					message_title += 'CREATE NEW SELL PRICE FROM SELL INVOICE'
+					message_title += 'LOSS PRICE => NEW SELL PRICE'
 					message_body += 'NAME:' + str(name) +'\n'
+					message_body += 'SELL PRICE:'+ str("{:,.0f}".format(sell_price_unit))+' to '+str("{:,.0f}".format(new_sell_price_unit)) +'\n'
+
 					line_str = 'PRICE TYPE:' +str(price_type.name) +'\n'
-					line_str += 'SELL PRICE:'+ str("{:,.0f}".format(sell_price_unit))+' to '+str("{:,.0f}".format(new_sell_price_unit)) +'\n'
+					#line_str += 'SELL PRICE:'+ str("{:,.0f}".format(sell_price_unit))+' to '+str("{:,.0f}".format(new_sell_price_unit)) +'\n'
 					line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 					line_str += 'MARGIN:'+ str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%) to '+str("{:,.0f}".format(new_margin))+'('+str("{:,.2f}".format(new_percentage))+'%)' +'\n'
 					line_str += 'Create by ALICE' +'\n'
-					message_body += line_str
+					#message_body += line_str
 					context = {
-						'category':'INVOICE',
+						'category':'SALES',
 						'sound_idx':SALES_SOUND_IDX,
 						'alert' : '!!!!!!!!!!',
 						'lines' : line_str,
@@ -275,9 +277,9 @@ class account_invoice(osv.osv):
 				line_str += 'SELL PRICE:'+ str("{:,.0f}".format(sell_price_unit))+'\n'
 				line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 				line_str += 'MARGIN:'+ str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%' +'\n'
-				message_body += line_str
+				#message_body += line_str
 				context = {
-					'category':'INVOICE',
+					'category':'SALES',
 					'sound_idx':SALES_SOUND_IDX,
 					'alert' : '!!!!!!!',
 					'lines' : line_str,
@@ -289,18 +291,18 @@ class account_invoice(osv.osv):
 		if (invoice_type == 'out_invoice') and (round(sell_price_unit_old) != round(sell_price_unit)) and ('BASE' not in name) and (sell_price_unit > 0):
 			#send notif
 			message_title = 'SALES PRICE DIFFER FROM PRICE LIST'
-			message_body = '[NOTIFICATION ONLY]' +'\n'
+			#message_body = '[NOTIFICATION ONLY]' +'\n'
 			message_body += 'PRODUCT:' + str(name) +'\n'
 			line_str += 'BON No:' +str(bon_number) +'\n'
 			line_str += 'EMPLOYEE:' +str(sale_order.employee_id.name_related) +'\n'
-			line_str = 'PRICE TYPE:'+str(price_type.name) +'\n'
+			line_str += 'PRICE TYPE:'+str(price_type.name) +'\n'
 			line_str += 'PRICE From '+ str("{:,.0f}".format(sell_price_unit_old))+' to '+str("{:,.0f}".format(sell_price_unit)) +'\n'
 			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
 			line_str += 'MARGIN From:'+ str("{:,.0f}".format(old_margin))+'('+str("{:,.2f}".format(old_percentage))+'%) to '+str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%)' +'\n'
 			
-			message_body += line_str
+			#message_body += line_str
 			context = {
-				'category':'INVOICE',
+				'category':'SALES',
 				'sound_idx':SALES_SOUND_IDX,
 				'alert' : '!!',
 				'lines' : line_str,

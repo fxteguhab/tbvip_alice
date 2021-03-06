@@ -85,7 +85,7 @@ class sale_order(osv.osv):
 			alert = '!'
 			for alert_lv in range(int(value // sale_limit )):
 				alert += '!'
-			message_title = 'SALE('+branch+')'+sale_watch+':'
+			message_title = 'SELL ALERT'+sale_watch+':'
 			message_body = 'CUST:'+str(cust_name)+'\n'+ employee+'('+str(bon_number)+'):'+str(row_count)+' row(s):'+str("{:,.0f}".format(value))# +'\n'+'Cust:'+cust_name
 			if (desc):
 					message_body = message_body +'\n'+ 'Desc:'+ str(desc)

@@ -50,7 +50,7 @@ class stock_inventory(osv.osv):
 				
 				#send notif
 				message_title = 'SO('+str(line.product_id.name_template)+')::'+str(inventory.location_id.name)	
-				message_body = 'DELTA:'+str(selisih)+'('+str(percentage)+'%)'+'\n'+'SO BY:'+str(inventory.employee_id.name_related)+'\n' + 'ADMIN:'+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY:'+str(line.theoretical_qty)+'\n'+'NEW QTY:'+str(line.product_qty)
+				message_body = 'DELTA: '+str(selisih)+'('+str(percentage)+'%)'+'\n'+'SO BY: '+str(inventory.employee_id.name_related)+'\n' + 'ADMIN: '+str(inventory.create_uid.partner_id.name)+'\n'+'OLD QTY: '+str(line.theoretical_qty)+'\n'+'NEW QTY: '+str(line.product_qty)
 				alert = ''
 				for alert_lv in range(int(percentage/50)):
 					alert += '!'
