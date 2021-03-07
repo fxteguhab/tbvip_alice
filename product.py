@@ -227,7 +227,8 @@ class product_template(osv.osv):
 		#'recommended_sale' : fields.float('Recommended Sale Price',compute="_compute_recommended_sale", store="True"),
 		'sale_notification' : fields.boolean('Sale Notification'),
 		'purchase_notification' : fields.boolean('Purchase Notification'),
-		 
+		'min_qty_notification' : fields.boolean('Min Qty Notification'),
+		'max_qty_notification' : fields.boolean('Max Qty Notification'),
 
 		'month_avg_sell' :  fields.float("AVG Sales/month"),
 		'recommended_qty' : fields.float("Rec Qty/2 weeks"),
@@ -397,6 +398,8 @@ class product_category(osv.osv):
 	_columns = {
 		'sale_notification' : fields.boolean('Sale Notification'),
 		'purchase_notification' : fields.boolean('Purchase Notification'),
+		'min_qty_notification' : fields.boolean('Min Qty Notification'),
+		'max_qty_notification' : fields.boolean('Max Qty Notification'),
 		'base_margin_string': fields.char('Margin'),
 	}
 
@@ -406,6 +409,8 @@ class product_category(osv.osv):
 		margin_string = data['base_margin_string'] if 'base_margin_string' in data else '0'
 		sale_notification = data['sale_notification'] if 'sale_notification' in data else False
 		purchase_notification = data['purchase_notification'] if 'purchase_notification' in data else False
+		min_qty_notification = data['min_qty_notification'] if 'min_qty_notification' in data else False
+		max_qty_notification = data['max_qty_notification'] if 'max_qty_notification' in data else False
 
 		product_obj = self.pool.get('product.template')
 		for category_id in ids:
@@ -416,6 +421,8 @@ class product_category(osv.osv):
 				'base_margin_string': margin_string,
 				'sale_notification': sale_notification,
 				'purchase_notification': purchase_notification,
+				'min_qty_notification' : fields.boolean('Min Qty Notification'),
+				'max_qty_notification' : fields.boolean('Max Qty Notification'),
 			})
 			for product_id in product_ids:
 				context = {

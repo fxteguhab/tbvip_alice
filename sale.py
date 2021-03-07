@@ -36,6 +36,8 @@ class sale_order(osv.osv):
 			product_watch = ''
 			extra_info = ''
 			product_name = line.product_id.name_template
+			qty_available = line.product_id.qty_available
+
 			sell_price_unit = line.price_unit
 			sell_price_unit_nett = line.price_unit_nett
 			sell_price_unit_nett_old = line.product_id.list_price
@@ -50,9 +52,10 @@ class sale_order(osv.osv):
 
 			if line.product_id.sale_notification: 
 				need_notif = True
-				product_watch += '[!!]'
-				if '[!!]' not in sale_watch:
-					sale_watch += '[!!]'	
+				product_watch = '[!!]'
+			if (line.product_id.min_qty_notification) and (qty_available - line.product_qty  <= line.product_id.min_qty):
+				product_watch += '[UNDERSTOCK]'
+				product_name += product_watch	
 			
 			if (round(sell_price_unit_nett_old) != round(sell_price_unit_nett)) and (sell_price_unit_nett_old > 1) and ('BASE' not in product_name) and (discount_string == False):
 				need_notif = False

@@ -25,14 +25,19 @@ class purchase_order(osv.osv):
 		row_count = len(purchase.order_line)
 		line_str = ''
 		product_watch = ''
+		qty_watch = ''
 		for line in purchase.order_line:
 			qty_available = line.product_id.qty_available
 			product_name = line.product_id.name_template
 			if line.product_id.sale_notification: 
 				product_watch = '[!!]'
 				product_name += product_watch
+			if (line.product_id.max_qty_notification) and (line.product_qty + qty_available >= line.product_id.max_qty):
+				product_watch = '[!!]'
+				product_name += product_watch	
+				qty_watch += ' [OVERSTOCK]'
 
-			line_str += str(line.product_qty)+':'+product_name + '\n'+'        Stock: '+str(qty_available)+'\n'
+			line_str += str(line.product_qty)+':'+product_name + '\n'+'        Stock: '+str(qty_available)+qty_watch+'\n'
 				
 		if ((value >= purchase_limit) or (product_watch == '[!!]')):
 			alert = '!'
