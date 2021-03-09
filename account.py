@@ -133,6 +133,7 @@ class account_invoice(osv.osv):
 				'price_type_id': price_type_id,
 				'product_id': product_id,
 				'start_date': now,
+				'last_buy': now,
 				'partner_id': partner_id,
 				'uom_id_1': product_uom,
 				'price_1': buy_price_unit,
