@@ -62,6 +62,17 @@ class account_invoice(osv.osv):
 			buy_price_unit_nett_old = buy_price_unit_nett
 			
 		price_type_id = context.get('price_type_id',0)
+
+		#CHECK PRICE LIST if = 0 check DB
+		if buy_price_unit_nett_old <= 0 :
+			buy_price_unit_nett_old = self.pool.get('product.current.price').get_current(cr, uid, product_id,price_type_id, product_uom,field="nett", context=context)
+		
+		if buy_price_unit_old <= 0 :
+			buy_price_unit_old = self.pool.get('product.current.price').get_current(cr, uid, product_id,price_type_id, product_uom,field="price", context=context)
+
+		if discount_string_old <= 0 :
+			discount_string_old = self.pool.get('product.current.price').get_current(cr, uid, product_id,price_type_id, product_uom,field="disc", context=context)
+
 		buy_price = buy_price_unit_nett if buy_price_unit_nett > 0 else 1
 		
 		margin = sell_price_unit_nett - buy_price_unit_nett
@@ -136,58 +147,60 @@ class account_invoice(osv.osv):
 				message_title = 'NEW BUY PRICE'
 				message_body += 'NAME:' + str(name) +'\n'	
 
-			change_price = False
-			#GANTI HARGA PRICE LIST 
-			if (round(buy_price_unit_old) != round(buy_price_unit)) and (buy_price_unit_old >0) and (buy_price_unit >0):
+			
+			#GANTI HARGA PRICE LIST BUY
+			if (round(buy_price_unit_old) != round(buy_price_unit)):
 				message_body += 'PLIST From '+ str("{:,.0f}".format(buy_price_unit_old))+' to '+str("{:,.0f}".format(buy_price_unit)) +'\n'
-
-				#if rugi or percentage < 1 then ganti harga jual
-				if (sell_price_unit_nett > 0) and (margin != 0) and ((margin < 0) or (percentage < 1)):	
-
-					#Get Param Value
-					param_obj = self.pool.get('ir.config_parameter')
-					param_ids = param_obj.search(cr, uid, [('key','in',['change_sell_price'])])
-					change_price_flag = 1 #default = change price
-					for param_data in param_obj.browse(cr, uid, param_ids):
-						if param_data.key == 'change_sell_price':
-							change_price_flag = param_data.value
-
-					if (change_price_flag == '0'):
-						change_price = False
-					else:
-						change_price = True	
-					
-					if (change_price):
-						message_title += ' => NEW SELL PRICE'
-						if (old_percentage >= 2):
-							delta = old_margin
-						else:
-							delta = (buy_price_unit_nett * 2 / 100) #2%
-
-						new_sell_price_unit = margin_utility.rounding_margin(buy_price_unit_nett + delta)
-						new_margin = new_sell_price_unit - buy_price_unit_nett
-						new_percentage = (new_margin/buy_price) * 100
-
-						message="ALICE : I'm changing %s sell price to %s" % (name,new_sell_price_unit)	
-						account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)
-						
-						sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
-						general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]
-
-						#Create new current sell price			
-						product_current_price_obj.create(cr, wuid, {
-						'price_type_id': sell_price_type_id,
-						'product_id': product_id,
-						'start_date': now,
-						'partner_id': general_customer_id,
-						'uom_id_1': product_uom,
-						'price_1': new_sell_price_unit,	
-						})	
 
 			#GANTI PROMO CAMPAIGN
 			if (str(discount_string_old) != str(discount_string)):
 				message_body += 'DISC From '+ str(discount_string_old)+' to '+ str(discount_string) +'\n'
-				message_title = 'NEW BUY DISCOUNT'
+				message_title += ' [NEW DISC]'
+
+			#if rugi or percentage < 1 then ganti harga jual
+			change_price = False
+			if (sell_price_unit_nett > 0) and (margin != 0) and ((margin < 0) or (percentage < 1)):	
+
+				#Get Param Value
+				param_obj = self.pool.get('ir.config_parameter')
+				param_ids = param_obj.search(cr, uid, [('key','in',['change_sell_price'])])
+				change_price_flag = 1 #default = change price
+				for param_data in param_obj.browse(cr, uid, param_ids):
+					if param_data.key == 'change_sell_price':
+						change_price_flag = param_data.value
+
+				if (change_price_flag == '0'):
+					change_price = False
+				else:
+					change_price = True	
+				
+				if (change_price):
+					message_title += ' => NEW SELL PRICE'
+					if (old_percentage >= 2):
+						delta = old_margin
+					else:
+						delta = (buy_price_unit_nett * 2 / 100) #2%
+
+					new_sell_price_unit = margin_utility.rounding_margin(buy_price_unit_nett + delta)
+					new_margin = new_sell_price_unit - buy_price_unit_nett
+					new_percentage = (new_margin/buy_price) * 100
+
+					message="ALICE : I'm changing %s sell price to %s" % (name,new_sell_price_unit)	
+					account_invoice_obj.message_post(cr, wuid, invoice_id, body=message)
+					
+					sell_price_type_id = self.pool.get('price.type').search(cr, uid, [('type','=','sell'),('is_default','=',True),])[0]
+					general_customer_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'tbvip', 'tbvip_customer_general')[1]
+
+					#Create new current sell price			
+					product_current_price_obj.create(cr, wuid, {
+					'price_type_id': sell_price_type_id,
+					'product_id': product_id,
+					'start_date': now,
+					'partner_id': general_customer_id,
+					'uom_id_1': product_uom,
+					'price_1': new_sell_price_unit,	
+						})	
+
 
 			#SUSUN NOTIFICATION
 			line_str += 'BUY NETT From '+ str("{:,.0f}".format(buy_price_unit_nett_old))+' to '+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
@@ -210,7 +223,7 @@ class account_invoice(osv.osv):
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		
-
+#################################################################################################################################################################################################
 		#cek semua bon jual, ada yg jual rugi ga (tanpa diskon)
 		if (invoice_type == 'out_invoice') and (sell_price_unit > 0) and (margin != 0) and ((margin < 0) or (percentage < 1))  and (discount_string == False):		
 			

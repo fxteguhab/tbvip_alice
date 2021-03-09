@@ -31,7 +31,7 @@ class sale_order(osv.osv):
 		product_name = ''
 		sale_watch = ''
 		need_notif = False
-		stored = False
+		stored = True
 		for line in sale.order_line:
 			product_watch = ''
 			extra_info = ''
@@ -85,6 +85,7 @@ class sale_order(osv.osv):
 			line_str += str(line.product_uos_qty)+':'+product_name + '\n'				
 
 		if ((value >= sale_limit) or (need_notif)):
+			if (value >= sale_limit): sale_watch += '[VALUE]'
 			alert = '!'
 			for alert_lv in range(int(value // sale_limit )):
 				alert += '!'
