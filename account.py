@@ -224,6 +224,7 @@ class account_invoice(osv.osv):
 				'alert' : '!!!!!!!',
 				'lines' : line_str,
 				'branch' : sale_order.create_uid.branch_id.name,
+				'product_id':product_id,
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
@@ -285,6 +286,7 @@ class account_invoice(osv.osv):
 						'alert' : '!!!!!!!!!!',
 						'lines' : line_str,
 						'branch': sale_order.create_uid.branch_id.name, 
+						'product_id':product_id,
 						}
 
 					self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
@@ -311,7 +313,7 @@ class account_invoice(osv.osv):
 		#ganti harga jual/salah jual di bon jual ?!?!?!? notif doank ga ada rubah apa2, 
 		if (invoice_type == 'out_invoice') and (round(sell_price_unit_old) != round(sell_price_unit)) and ('BASE' not in name) and (sell_price_unit > 0):
 			#send notif
-			message_title = 'SALES PRICE DIFFER FROM PRICE LIST'
+			message_title = 'SALES PRICE DIFFER FROM STANDARD'
 			#message_body = '[NOTIFICATION ONLY]' +'\n'
 			message_body += 'PRODUCT:' + str(name) +'\n'
 			line_str += 'BON No:' +str(bon_number) +'\n'

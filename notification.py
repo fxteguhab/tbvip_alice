@@ -75,6 +75,8 @@ class tbvip_fcm_notif(osv.osv):
 			now = datetime.now() + timedelta(hours = 7)
 			branch_name = context.get('branch','VIP')
 			alert = context.get('alert','!')
+			product_id = context.get('product_id','')
+			
 			db = firestore.client()
 			doc_ref = db.collection(unicode(notification_topic)).document()
 			doc_ref.set({
@@ -87,4 +89,5 @@ class tbvip_fcm_notif(osv.osv):
 				u'lines':unicode(lines),
 				u'state':u'unread',
 				u'alert':unicode(alert),
+				u'product_id':unicode(product_id),
 			})
