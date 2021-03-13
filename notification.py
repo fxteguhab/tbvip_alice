@@ -52,31 +52,31 @@ class tbvip_fcm_notif(osv.osv):
 
 		if not has_notification_lib: return
 		#Get Param Value
-		#param_obj = self.pool.get('ir.config_parameter')
-		#param_ids = param_obj.search(cr, uid, [('key','in',['notification_topic'])])
-		#notification_topic = ''
-		#for param_data in param_obj.browse(cr, uid, param_ids):
-		#	if param_data.key == 'notification_topic':
-		#		notification_topic = param_data.value
+		param_obj = self.pool.get('ir.config_parameter')
+		param_ids = param_obj.search(cr, uid, [('key','in',['notification_topic'])])
+		notification_topic = ''
+		for param_data in param_obj.browse(cr, uid, param_ids):
+			if param_data.key == 'notification_topic':
+				notification_topic = param_data.value
 
-		branch_name = context.get('branch','VIP')
+		
 		#SELECT SOUND FOR NOTIFICATION
 		sound_index = context.get('sound_idx',0)
 		sound = 'notification'+str(sound_index)+'.mp3'
 
 		#push notification
 		push_service = FCMNotification(api_key="AAAAl1iYTeo:APA91bHp-WiAzZxjiKa93znVKsD1N2AgtgwB1azuEYyvpWHyFR2WfZRj3UPXMov9PzbCBpOCScz8YN_Ki2kEVf_5V43bgUDjJmHSh78NOK0KLWOU2cgYUe9KClTkTTwpTzUcaBB2hVqT")
-		push_service.notify_topic_subscribers(topic_name=branch_name, message_title=message_title,message_body=message_body, sound=sound)
+		push_service.notify_topic_subscribers(topic_name=notification_topic, message_title=message_title,message_body=message_body, sound=sound)
 
 		#Firebase Firestore
 		if context.get('is_stored',True):		
 			category = context.get('category','BASE')
 			lines = context.get('lines','')
 			now = datetime.now() + timedelta(hours = 7)
-			#now = datetime.now()
+			branch_name = context.get('branch','VIP')
 			alert = context.get('alert','!')
 			db = firestore.client()
-			doc_ref = db.collection(unicode(branch_name)).document()
+			doc_ref = db.collection(unicode(notification_topic)).document()
 			doc_ref.set({
 				u'branch':unicode(branch_name),
 				u'category':unicode(category),
