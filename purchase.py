@@ -26,6 +26,8 @@ class purchase_order(osv.osv):
 		line_str = ''
 		product_watch = ''
 		qty_watch = ''
+		branch_name = user_obj.browse(cr,uid,uid).branch_id.name
+		
 		for line in purchase.order_line:
 			qty_available = line.product_id.qty_available
 			product_name = line.product_id.name_template
@@ -35,9 +37,9 @@ class purchase_order(osv.osv):
 			if (line.product_id.max_qty_notification) and (line.product_qty + qty_available >= line.product_id.max_qty):
 				product_watch = '[!!]'
 				product_name += product_watch	
-				qty_watch += ' [OVERSTOCK]'
+				qty_watch += '-[OVERSTOCK]'
 
-			line_str += str(line.product_qty)+':'+product_name + '\n'+'        Stock: '+str(qty_available)+qty_watch+'\n'
+			line_str += str(line.product_qty)+'('+str(qty_available)+')'+':'+product_name + qty_watch+'\n'
 				
 		if ((value >= purchase_limit) or (product_watch == '[!!]')):
 			alert = '!'
@@ -51,6 +53,7 @@ class purchase_order(osv.osv):
 				'sound_idx':PURCHASE_SOUND_IDX,
 				'lines' : line_str,
 				'alert' : alert,
+				'branch':branch_name,
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)

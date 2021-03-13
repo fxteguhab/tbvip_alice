@@ -22,12 +22,14 @@ class product_template(osv.osv):
 		product = self.browse(cr, uid, new_id, context=context)
 		name = product.name
 		create_by = product.create_uid.name
+		branch_name = user_obj.browse(cr,uid,uid).branch_id.name
 
 		message_title = 'NEW ITEM CREATION'
 		message_body = 'NAME:'+str(name) +'\n'+'Created by :' +str(create_by)
 		context = {
 				'category':'PRODUCT',
 				'sound_idx':PRODUCT_SOUND_IDX,
+				'branch:' : branch_name,
 				}
 		self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 

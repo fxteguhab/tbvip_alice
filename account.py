@@ -28,7 +28,7 @@ class account_invoice(osv.osv):
 		origin = context.get('origin','')
 		categ_id = context.get('categ_id','')
 		bon_number = context.get('bon_number','')
-
+		
 		buy_price_unit_nett = 0
 		buy_price_unit_nett_old = 0
 		sell_price_unit_nett = 0
@@ -90,6 +90,7 @@ class account_invoice(osv.osv):
 		account_invoice_obj = self.pool.get('account.invoice')
 		product_current_price_obj = self.pool.get('product.current.price')
 		user_obj = self.pool.get('res.users')
+
 		domain = [
 				('name', '=', 'ALICE'),
 			]
@@ -222,6 +223,7 @@ class account_invoice(osv.osv):
 				'sound_idx':PURCHASE_SOUND_IDX,
 				'alert' : '!!!!!!!',
 				'lines' : line_str,
+				'branch' : sale_order.create_uid.branch_id.name,
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
@@ -282,9 +284,11 @@ class account_invoice(osv.osv):
 						'sound_idx':SALES_SOUND_IDX,
 						'alert' : '!!!!!!!!!!',
 						'lines' : line_str,
+						'branch': sale_order.create_uid.branch_id.name, 
 						}
 
 					self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+			'''		
 			else:
 				#send notif jual tinting rugi
 				message_title += 'TINTING PAINT SELL LOSS'
@@ -292,7 +296,7 @@ class account_invoice(osv.osv):
 
 				line_str += 'SELL PRICE:'+ str("{:,.0f}".format(sell_price_unit))+'\n'
 				line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
-				line_str += 'MARGIN:'+ str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%' +'\n'
+				line_str += 'MARGIN:'+ str("{:,.0f}".format(margin))+'('+str("{:,.2f}".format(percentage))+'%)' +'\n'
 				#message_body += line_str
 				context = {
 					'category':'SALES',
@@ -302,6 +306,7 @@ class account_invoice(osv.osv):
 					}
 
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+			'''
 
 		#ganti harga jual/salah jual di bon jual ?!?!?!? notif doank ga ada rubah apa2, 
 		if (invoice_type == 'out_invoice') and (round(sell_price_unit_old) != round(sell_price_unit)) and ('BASE' not in name) and (sell_price_unit > 0):
@@ -311,6 +316,7 @@ class account_invoice(osv.osv):
 			message_body += 'PRODUCT:' + str(name) +'\n'
 			line_str += 'BON No:' +str(bon_number) +'\n'
 			line_str += 'EMPLOYEE:' +str(sale_order.employee_id.name_related) +'\n'
+			line_str += 'ADMIN:' +str(sale_order.create_uid) +'\n'
 			line_str += 'PRICE TYPE:'+str(price_type.name) +'\n'
 			line_str += 'PRICE From '+ str("{:,.0f}".format(sell_price_unit_old))+' to '+str("{:,.0f}".format(sell_price_unit)) +'\n'
 			line_str += 'BUY PRICE:'+str("{:,.0f}".format(buy_price_unit_nett)) +'\n'
@@ -322,6 +328,7 @@ class account_invoice(osv.osv):
 				'sound_idx':SALES_SOUND_IDX,
 				'alert' : '!!',
 				'lines' : line_str,
+				'branch': sale_order.create_uid.branch_id.name,
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)

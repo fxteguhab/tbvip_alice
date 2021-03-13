@@ -22,7 +22,7 @@ class product_current_price(osv.osv):
 		else:
 				wuid = SUPERUSER_ID
 
-		user_obj = self.pool.get('res.users')
+		#user_obj = self.pool.get('res.users')
 		domain = [
 				('name', '=', 'FEI'),
 			]
@@ -31,7 +31,9 @@ class product_current_price(osv.osv):
 				fei_id = fei[0]
 		else:
 			fei_id = SUPERUSER_ID
-			
+		
+		branch_name = user_obj.browse(cr,uid,uid).branch_id.name
+
 		if (uid != SUPERUSER_ID) and (uid != wuid) and (uid != fei_id):	
 			prices = self.browse(cr, uid, new_id, context=context)
 			product_id = prices.product_id
@@ -84,6 +86,7 @@ class product_current_price(osv.osv):
 					'sound_idx':PRODUCT_SOUND_IDX,
 					'alert' : '!!!!!!!',
 					'lines' : line_str,
+					'branch' : branch_name,
 					}
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		

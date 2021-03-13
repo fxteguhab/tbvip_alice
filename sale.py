@@ -27,6 +27,8 @@ class sale_order(osv.osv):
 		bon_number = sale.bon_number
 		desc = sale.client_order_ref
 		employee = sale.employee_id.name
+		admin = sale.create_uid.name
+
 		line_str = ''
 		product_name = ''
 		sale_watch = ''
@@ -90,7 +92,7 @@ class sale_order(osv.osv):
 			for alert_lv in range(int(value // sale_limit )):
 				alert += '!'
 			message_title = 'SELL ALERT'+sale_watch+':'
-			message_body = 'CUST:'+str(cust_name)+'\n'+ employee+'('+str(bon_number)+'):'+str(row_count)+' row(s):'+str("{:,.0f}".format(value))# +'\n'+'Cust:'+cust_name
+			message_body = 'CUST:'+str(cust_name)+'\n ADMIN:' +str(admin)+'\n'+employee+'('+str(bon_number)+'):'+str(row_count)+' row(s):'+str("{:,.0f}".format(value))# +'\n'+'Cust:'+cust_name
 			if (desc):
 					message_body = message_body +'\n'+ 'Desc:'+ str(desc)
 			

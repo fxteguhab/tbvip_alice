@@ -25,6 +25,7 @@ class tbvip_bon_book(osv.osv):
 				'category':'SALES',
 				'sound_idx':PURCHASE_SOUND_IDX,
 				'alert' : alert,
+				'branch': branch_name,
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)

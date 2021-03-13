@@ -17,7 +17,7 @@ class stock_inventory(osv.osv):
 		alice = user_obj.search(cr, uid, domain)
 		wuid = alice[0]
 		stock_opname_inject = self.pool.get('stock.opname.inject')
-
+		branch_name = user_obj.browse(cr,uid,uid).branch_id.name
 		param_obj = self.pool.get('ir.config_parameter')
 		param_ids = param_obj.search(cr, uid, [('key','in',['so_limit_koef'])])
 		
@@ -28,7 +28,7 @@ class stock_inventory(osv.osv):
 
 
 		row_total_qty = 0
-		inventory = self.browse(cr, uid, ids, context=context)
+		inventory = self.browse(cr, uid, ids, context=context)	
 		for line in inventory.line_ids:
 			row_total_qty += line.product_qty
 			selisih =  line.product_qty - line.theoretical_qty
@@ -58,6 +58,7 @@ class stock_inventory(osv.osv):
 					'category':'PRODUCT',
 					'sound_idx':PRODUCT_SOUND_IDX,
 					'alert' : alert,
+					'branch' : branch_name,
 					}
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		return result
