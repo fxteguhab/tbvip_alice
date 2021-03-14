@@ -26,6 +26,7 @@ class purchase_order(osv.osv):
 		line_str = ''
 		product_watch = ''
 		qty_watch = ''
+		user_obj = self.pool.get('res.users')
 		branch_name = user_obj.browse(cr,uid,uid).branch_id.name
 		
 		for line in purchase.order_line:
