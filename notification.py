@@ -75,8 +75,8 @@ class tbvip_fcm_notif(osv.osv):
 			now = datetime.now() + timedelta(hours = 7)
 			branch_name = context.get('branch','VIP')
 			alert = context.get('alert','!')
-			product_id = context.get('product_id',False)
-			new_price = context.get('new_price',False)
+			product_id = context.get('product_id','')
+			new_price = context.get('new_price','')
 			
 			db = firestore.client()
 			doc_ref = db.collection(unicode(notification_topic)).document()
