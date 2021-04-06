@@ -35,6 +35,7 @@ class account_invoice(osv.osv):
 		sell_price_unit_nett_old = 0
 		buy_price_unit_old = 0
 		new_price = 0
+		new_sell_price_unit = 0
 		
 		margin = 0
 		old_margin = 0
