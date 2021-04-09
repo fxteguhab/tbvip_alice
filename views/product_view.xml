@@ -128,6 +128,19 @@
 			</field>
 		</record>
 
+		<!-- PRODUCT TEMPLATE KANBAN -->
+		<record id="product_template_kanban_stock_view_inherit2" model="ir.ui.view">
+			<field name="name">Product.template.kanban.stock.inherit2</field>
+			<field name="model">product.template</field>
+			<field name="inherit_id" ref="stock.product_template_kanban_stock_view"/>
+			<field name="arch" type="xml">	
+				<xpath expr = "//a[3]" position= "replace"/>
+				<field name = "product_current_price" position = "before">
+					<li style="color:blue;font-size:11px"><em>SKU: <field name ="id"/></em></li>
+				</field>
+			</field>
+		</record>
+
 	</data>
 </openerp>
 

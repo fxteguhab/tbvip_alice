@@ -28,6 +28,8 @@ class account_invoice(osv.osv):
 		origin = context.get('origin','')
 		categ_id = context.get('categ_id','')
 		bon_number = context.get('bon_number','')
+		product_tmpl_id = context.get('product_tmpl_id',0)
+		qty_available = context.get('qty_available',0)
 		
 		buy_price_unit_nett = 0
 		buy_price_unit_nett_old = 0
@@ -339,6 +341,10 @@ class account_invoice(osv.osv):
 				}
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
-			
+		
+		#Edit product stock di TOPED
+		if (invoice_type == 'in_invoice'): #buy
+			toped = self.pool.get('tokopedia.connector')
+			toped.stock_update(cr,uid,product_tmpl_id,qty_available)
 		return result
 		############################################################################################################################

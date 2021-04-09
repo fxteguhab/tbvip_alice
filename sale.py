@@ -55,7 +55,7 @@ class sale_order(osv.osv):
 			if line.product_id.sale_notification: 
 				need_notif = True
 				product_watch = '[!!]'
-			if (line.product_id.min_qty_notification) and (qty_available - line.product_qty  <= line.product_id.min_qty):
+			if (line.product_id.min_qty_notification) and (qty_available  <= line.product_id.min_qty):
 				product_watch += '[UNDERSTOCK]'
 				product_name += product_watch	
 			
@@ -80,6 +80,12 @@ class sale_order(osv.osv):
 				product_watch += '[LOSS]'
 				if '[LOSS]' not in sale_watch:
 					sale_watch += '[LOSS]'
+
+
+			#update product stock on TOPED
+			toped = self.pool.get('tokopedia.connector')
+			toped.stock_update(cr,uid,line.product_id.product_tmpl_id.id,qty_available)
+
 
 			product_name += product_watch + '('+str("{:,.0f}".format(margin))+')'
 			if (extra_info != ''):

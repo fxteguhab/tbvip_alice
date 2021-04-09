@@ -16,6 +16,9 @@
 						</group>
 					</page>
 				</notebook>
+				<field name="active" position="before">
+					<field name="id" string="SKU"/>
+				</field>
 			</field>
 		</record>
 

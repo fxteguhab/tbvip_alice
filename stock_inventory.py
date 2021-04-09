@@ -61,4 +61,8 @@ class stock_inventory(osv.osv):
 					'branch' : branch_name,
 					}
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
+
+			#update product stock on TOPED
+			toped = self.pool.get('tokopedia.connector')
+			toped.stock_update(cr,uid,line.product_id.product_tmpl_id.id,line.product_qty)
 		return result
