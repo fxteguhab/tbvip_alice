@@ -10,3 +10,4 @@ import price_list
 import bon
 import purchase_needs
 import hr
+import tokopedia
