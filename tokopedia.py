@@ -92,6 +92,7 @@ class tokopedia_connector(osv.osv):
 		#print"new_stock:"+str(new_stock)+"this"
 		response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/stock/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
 		#print "response:"+str(response)
+		_logger.info('SKU : %s',str(product_sku))
 		_logger.info('response : %s',str(response))
 		if response["data"]:
 			return response["data"]["succeed_rows"]
