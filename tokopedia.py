@@ -4,6 +4,9 @@ from openerp.osv import osv, fields
 import urllib
 import json
 import requests
+import logging
+
+_logger = logging.getLogger(__name__)
 
 ACCOUNT_URL = "https://accounts.tokopedia.com/"
 PRODUCT_STOCK_URL = "https://fs.tokopedia.net/inventory/v1/fs/"
@@ -24,9 +27,9 @@ class tokopedia_connector(osv.osv):
 		notification_topic = ''
 		for param_data in param_obj.browse(cr, uid, param_ids):
 			if param_data.key == 'TOKOPEDIA_STORE_ID':
-				return param_data.value
+				return str(param_data.value)
 			else:
-				return ''
+				return '0'
 
 	def _call_api(self,host, endpoint, params=None, return_response=False, method="GET", access_token='', credentials=''):
 		"""
@@ -89,6 +92,7 @@ class tokopedia_connector(osv.osv):
 		#print"new_stock:"+str(new_stock)+"this"
 		response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/stock/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
 		#print "response:"+str(response)
+		_logger.info('response : %s',str(response))
 		if response["data"]:
 			return response["data"]["succeed_rows"]
 		else:
