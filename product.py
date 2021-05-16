@@ -34,11 +34,26 @@ class product_template(osv.osv):
 				}
 		self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
+		#write default SKU
+		#print "check sku"
+		if ((product.sku == '') or ( not product.sku)):
+			print"enter default sku"
+			self.write(cr,uid,new_id,{
+				'sku' : str(product.id),
+				})
+
 		return new_id
 
 	def maintenance_calc_multiple_purchase_qty(self, cr, uid, context={}):
 		product_templates = self.pool.get('product.template').search(cr, uid, [])
 		self.action_calc_multiple_purchase_qty(cr, uid, product_templates, context=context)
+
+	def maintenance_fill_SKU(self, cr, uid, context={}):
+		product_templates = self.pool.get('product.template').browse(cr,uid, self.pool['product.template'].search(cr,uid,[]))
+		for product in product_templates:
+			self.write(cr,uid,product.id,{
+				'sku' : str(product.id),
+				})
 
 	def action_calc_multiple_purchase_qty(self, cr, uid, ids, context=None):
 		invoice_line_obj = self.pool.get('account.invoice.line')
@@ -220,7 +235,7 @@ class product_template(osv.osv):
 				order_point_obj.create(cr, uid, order_vals, context=context)
 				#_logger.info("Stop Compute Reordering RULES")
 		#_logger.info("Stop Compute Recommended QTY")
-				
+		
 #---------------------------------------------------------------------------------------------------------------------------------------------		
 	_columns = {
 		'base_margin_string': fields.char('Expected Margin'),	
@@ -239,13 +254,25 @@ class product_template(osv.osv):
 		'auto_so': fields.boolean('Allow Generate Stock Opname', help="Allow to be included in auto generated stock opname"),
 
 		'stock_qty_ideal': fields.float("Ideal Stock"),	
-		'stock_qty_verified': fields.boolean('Verified Stock'),	
+		'stock_qty_verified': fields.boolean('Verified Stock'),
+		'sku' :fields.char('SKU'),
+		'toped_price_update': fields.boolean('Price Update', required=True),
+		'toped_stock_update': fields.boolean('Stock Update', required=True),
+		'toped_price_type' : fields.many2one('price.type', 'Price Type', required=True),
+		'toped_delta_price' : fields.char('Delta Price'),
+		'toped_delta_stock' : fields.char('Delta Stock'),
 	}
 
 	_defaults = {
 		'base_margin_string': '0',
 		'base_margin_amount': 0,
 		'auto_so' : True,
+		'sku' : '',
+		'toped_stock_update' : True,
+		'toped_price_update' : True,
+		'toped_delta_price' : 0,
+		'toped_delta_stock' : 0,
+		'toped_price_type' : 1,
 	}
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------

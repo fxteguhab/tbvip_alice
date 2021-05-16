@@ -138,7 +138,8 @@
 					<attribute name="invisible">1</attribute>
 				</xpath>
 				<field name = "product_current_price" position = "before">
-					<li style="color:blue;font-size:11px"><em>SKU: <field name ="id"/></em></li>
+					<!--<li style="color:blue;font-size:11px"><em>ID: <field name ="id"/></em></li>-->
+					<li style="color:blue;font-size:11px"><em>SKU: <field name ="sku"/></em></li>
 				</field>
 			</field>
 		</record>

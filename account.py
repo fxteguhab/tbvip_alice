@@ -29,6 +29,7 @@ class account_invoice(osv.osv):
 		categ_id = context.get('categ_id','')
 		bon_number = context.get('bon_number','')
 		product_tmpl_id = context.get('product_tmpl_id',0)
+		product_sku = context.get('product_sku',0)
 		qty_available = context.get('qty_available',0)
 		
 		buy_price_unit_nett = 0
@@ -344,7 +345,9 @@ class account_invoice(osv.osv):
 		
 		#Edit product stock di TOPED
 		if (invoice_type == 'in_invoice'): #buy
-			toped = self.pool.get('tokopedia.connector')
-			toped.stock_update(cr,uid,product_tmpl_id,qty_available)
+			product_template = self.pool('product.template').browse(cr,uid,product_tmpl_id)
+			if (product_template.toped_stock_update):
+				toped = self.pool.get('tokopedia.connector')
+				toped.stock_update(cr,uid,product_template.sku,qty_available)
 		return result
 		############################################################################################################################
