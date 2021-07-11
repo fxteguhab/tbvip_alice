@@ -257,11 +257,11 @@ class product_template(osv.osv):
 				buy_price_unit_nett = product.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, product.uom_id.id,field="nett", context=None)
 
 				valuation =  stocks * buy_price_unit_nett
-				print "name:"+str(product.name)
-				print "total_qty:"+str(stocks)
-				print "buy_price_unit_nett:"+str(buy_price_unit_nett) 
-				print "valuation:"+str(valuation)
-				print "-----"
+				#print "name:"+str(product.name)
+				#print "total_qty:"+str(stocks)
+				#print "buy_price_unit_nett:"+str(buy_price_unit_nett) 
+				#print "valuation:"+str(valuation)
+				#print "-----"
 				
 			self.write(cr, uid, product.id, {
 				'valuation': valuation
