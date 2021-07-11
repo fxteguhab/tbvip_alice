@@ -121,7 +121,7 @@ class account_invoice(osv.osv):
 		#print "old percentage"+str(old_percentage)
 
 		#force create new buy price karena ada perubahan harga beli ##################################################################################################	
-		if (invoice_type == 'in_invoice') and (round(buy_price_unit_nett_old) != round(buy_price_unit_nett)) :		
+		if (invoice_type == 'in_invoice') and (round(buy_price_unit_nett_old) != round(buy_price_unit_nett)) and (round(buy_price_unit_nett) > 0) :		
 			
 			#Get Param Value
 			param_obj = self.pool.get('ir.config_parameter')
