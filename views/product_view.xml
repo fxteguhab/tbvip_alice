@@ -7,12 +7,13 @@
 			<field name="inherit_id" ref="product.product_template_form_view"/>
 			<field name="arch" type="xml">
 				<notebook position="inside">
-					<page string="Margin">
+					<page string="Margin-Valuation">
 						<group string="Margin Analysis">
 							<field name = "base_margin_string" on_change="onchange_margin_string(base_margin_string)"/>
 							<field name = "base_margin_amount"/>
 							<field name = "real_margin_percentage" widget="progressbar"/>
 							<field name = "real_margin" />
+							<field name = "valuation" />
 						</group>
 					</page>
 				</notebook>
@@ -52,6 +53,21 @@
 					<field name ="month_avg_sell" />
 					<field name ="real_margin" groups="tbvip.group_management_central"/>
 					<field name ="real_margin_percentage" groups="tbvip.group_management_central"/>
+					<field name ="valuation" groups="tbvip.group_management_central"/>
+				</field>
+			</field>
+		</record>
+
+		<record id="view_stock_product_template_tree_inherit" model="ir.ui.view">
+			<field name="name">product.template.stock.tree.inherit2</field>
+			<field name="model">product.template</field>
+			<field name="inherit_id" ref="stock.view_stock_product_template_tree"/>
+			<field name="arch" type="xml">
+				<field name="qty_available" position="attributes">
+					<attribute name="invisible">1</attribute>
+				</field>
+				<field name="qty_available" position ="after">
+					<field name ="total_qty"/>				
 				</field>
 			</field>
 		</record>

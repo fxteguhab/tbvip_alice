@@ -37,7 +37,7 @@ class product_template(osv.osv):
 		#write default SKU
 		#print "check sku"
 		if ((product.sku == '') or ( not product.sku)):
-			print"enter default sku"
+			#print"enter default sku"
 			self.write(cr,uid,new_id,{
 				'sku' : str(product.id),
 				})
@@ -235,7 +235,41 @@ class product_template(osv.osv):
 				order_point_obj.create(cr, uid, order_vals, context=context)
 				#_logger.info("Stop Compute Reordering RULES")
 		#_logger.info("Stop Compute Recommended QTY")
-		
+
+	def _product_total_stock(self, cr, uid, ids, field_name, arg, context={}):
+		result = {}
+		quant_obj = self.pool.get('stock.quant')
+		for product in self.browse(cr, uid, ids, context=context):
+			stocks = 0
+			buy_price_unit_nett = 0
+			valuation = 0
+			for variant in product.product_variant_ids:
+				map = {}
+				quant_ids = quant_obj.search(cr, uid, [('product_id', '=', variant.id), ('location_id.usage', '=', 'internal'),('location_id.scrap_location', '=', False)])
+				for quant in quant_obj.browse(cr, uid, quant_ids):
+					stocks += quant.qty
+			
+
+			#GET CURRENT BUY PRICE
+			#if len(product.product_variant_ids) > 0:
+				#variant = product.product_variant_ids[0]
+				price_type_id_buy = product.pool.get('price.type').search(cr,uid,[('type','=','buy'),('is_default','=',True),])[0]
+				buy_price_unit_nett = product.pool.get('product.current.price').get_current(cr, uid, variant.id,price_type_id_buy, product.uom_id.id,field="nett", context=None)
+
+				valuation =  stocks * buy_price_unit_nett
+				print "name:"+str(product.name)
+				print "total_qty:"+str(stocks)
+				print "buy_price_unit_nett:"+str(buy_price_unit_nett) 
+				print "valuation:"+str(valuation)
+				print "-----"
+				
+			self.write(cr, uid, product.id, {
+				'valuation': valuation
+				}, context=context)	
+
+			result[product.id] = stocks
+		return result
+
 #---------------------------------------------------------------------------------------------------------------------------------------------		
 	_columns = {
 		'base_margin_string': fields.char('Expected Margin'),	
@@ -261,6 +295,8 @@ class product_template(osv.osv):
 		'toped_price_type' : fields.many2one('price.type', 'Price Type', required=True),
 		'toped_delta_price' : fields.char('Delta Price'),
 		'toped_delta_stock' : fields.char('Delta Stock'),
+		'total_qty' : fields.function(_product_total_stock, string="Total Qty", type='float', store=False),
+		'valuation' : fields.float('Valuation'),
 	}
 
 	_defaults = {
@@ -376,7 +412,7 @@ class product_template(osv.osv):
 				buy_price = record.standard_price if record.standard_price > 0 else 1
 				percentage = (real_margin/buy_price) * 100 
 			record.real_margin = real_margin
-			record.real_margin_percentage = percentage
+			record.real_margin_percentage = percentage	
 
 class product_product(osv.osv):
 	_inherit = 'product.product'
