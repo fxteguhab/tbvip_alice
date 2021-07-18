@@ -46,9 +46,9 @@ class shopee_connector(osv.osv):
 		
 		for param_data in param_obj.browse(cr, uid, param_ids):
 			if param_data.key == 'SHOPEE_STORE_ID':
-				return str(param_data.value)
+				return int(param_data.value)
 			else:
-				return '0'
+				return 0
 
 	def _call_api(self,host, endpoint, params=None, return_response=False, method="GET", access_token='', credentials=''):
 		url = "{0}{1}".format(host, endpoint)
@@ -147,7 +147,7 @@ class shopee_connector(osv.osv):
 		'item_id_list' : item_id,
 		}
 		response = _call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		if (response):
+		if ('response' in response):
 			print "PRODUCT INFO :"+ str(response["response"]["item_list"][0]) + '\n'
 			return response
 
@@ -168,7 +168,7 @@ class shopee_connector(osv.osv):
 		'item_id_list' : item_id,
 		}
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		if (response["response"]):	
+		if ('response' in response):	
 			#if (response['response']['item_list'][0]['item_sku']):
 			return response["response"]["item_list"][0]["item_sku"]
 		else: return 0
@@ -226,7 +226,7 @@ class shopee_connector(osv.osv):
 		}
 
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		if (response["response"]):
+		if ('response' in response):
 			item_count = response["response"]["total_count"]
 			for i in range(item_count):
 				if (response["response"]):
