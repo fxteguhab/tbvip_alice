@@ -69,6 +69,7 @@ class shopee_connector(osv.osv):
 			response = requests.get(url, params=params, headers=headers)
 
 		json_response = response.json()
+		_logger.info('json_response : %s',str(json_response))
 		return json_response
 
 
@@ -225,7 +226,7 @@ class shopee_connector(osv.osv):
 		}
 
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		if (response['response']):
+		if (response):
 			item_count = response['response']['total_count']
 			for i in range(item_count):
 				if (response['response']):
