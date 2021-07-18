@@ -128,7 +128,7 @@ class shopee_connector(osv.osv):
 		}
 		response = _call_api(host,path, params=data, method="GET",access_token=access_token)
 		print "SHOP INFO :" + str(response) +'\n'
-		print "SHOP NAME :" + str(response['shop_name']) +'\n'
+		print "SHOP NAME :" + str(response["shop_name"]) +'\n'
 
 	def get_product_info(shop_id, partner_id, partner_key, access_token, item_id):		
 		timest = int(time.time())
@@ -148,7 +148,7 @@ class shopee_connector(osv.osv):
 		}
 		response = _call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
 		if (response):
-			print "PRODUCT INFO :"+ str(response['response']['item_list'][0]) + '\n'
+			print "PRODUCT INFO :"+ str(response["response"]["item_list"][0]) + '\n'
 			return response
 
 	def get_product_sku(self,shop_id, partner_id, partner_key, access_token, item_id):		
@@ -167,10 +167,10 @@ class shopee_connector(osv.osv):
 
 		'item_id_list' : item_id,
 		}
-		response = _call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		if (response['response']):	
+		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
+		if (response["response"]):	
 			#if (response['response']['item_list'][0]['item_sku']):
-			return response['response']['item_list'][0]['item_sku']
+			return response["response"]["item_list"][0]["item_sku"]
 		else: return 0
 
 	def get_product_list(shop_id, partner_id, partner_key, access_token):		
@@ -192,7 +192,7 @@ class shopee_connector(osv.osv):
 		'item_status':'NORMAL',
 		}
 		response = _call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		print "ITEM LIST : "+ str(response['response']) +'\n'
+		print "ITEM LIST : "+ str(response["response"]) +'\n'
 		#print "ITEM COUNT : "+ str(response['response']['total_count']) +'\n'
 		'''
 		item_count = response['response']['total_count']
@@ -226,12 +226,12 @@ class shopee_connector(osv.osv):
 		}
 
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		if (response):
-			item_count = response['response']['total_count']
+		if (response["response"]):
+			item_count = response["response"]["total_count"]
 			for i in range(item_count):
-				if (response['response']):
+				if (response["response"]):
 				#if (response['response']['item'][i]['item_id']):
-					item_id = response['response']['item'][i]['item_id']
+					item_id = response["response"]["item"][i]["item_id"]
 					item_sku = self.get_product_sku(shop_id, partner_id, partner_key, access_token,item_id)
 					if ((item_sku > 0) and (item_sku == sku)): 
 						result_item_id = item_id
