@@ -7,9 +7,9 @@ import requests
 import hmac
 import time
 import hashlib
-import logging
+#import logging
 
-_logger = logging.getLogger(__name__)
+#_logger = logging.getLogger(__name__)
 
 HOST_URL = "https://partner.shopeemobile.com"
 USER_AGENT = "Alice_python/1.0"
@@ -21,8 +21,8 @@ PARTNER_KEY = "27bc6c1f2bc3c736db69106dd04c2e5e9db443f4a55367b7c59084f0a653a8cc"
 
 #expirated token
 CODE = "accfb0dceb4b13f4158d94157dd7c86b"
-access_token ="4e460686106c2b3f59db781089e53060"
-refresh_token = "52eff83f918806ce2b734fee8d9d7a81"
+access_token ="10a4033e6c1c84b14840c18c9d2ec749"
+refresh_token = "f3d82405f3a3e27e61d507b27adadbb3"
 
 #https://www.tokobesivip.com/?code=accfb0dceb4b13f4158d94157dd7c86b&shop_id=219482557
 
@@ -69,7 +69,7 @@ class shopee_connector(osv.osv):
 			response = requests.get(url, params=params, headers=headers)
 
 		json_response = response.json()
-		_logger.info('json_response : %s',str(json_response))
+		#_logger.info('json_response : %s',str(json_response))
 		return json_response
 
 
@@ -105,8 +105,8 @@ class shopee_connector(osv.osv):
 		
 		access_token = ret.get("access_token")
 		new_refresh_token = ret.get("refresh_token")
-		_logger.info('access_token : %s',str(access_token))
-		_logger.info('refresh_token : %s',str(new_refresh_token))
+		#_logger.info('access_token : %s',str(access_token))
+		#_logger.info('refresh_token : %s',str(new_refresh_token))
 		#print "access_token :" +str(access_token)
 		#print "refresh_token:" +str(new_refresh_token)
 		return access_token, new_refresh_token
