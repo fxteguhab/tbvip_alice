@@ -240,7 +240,7 @@ class shopee_connector(osv.osv):
 		path = "/api/v2/product/update_stock"
 		
 		#GET REFRESH TOKEN
-		shopee = self.browse(cr,uid,ids)
+		shopee = self.browse(cr,uid,1)
 		refresh_token = shopee.refresh_token
 		SHOP_ID = self._getStoreID(cr,uid)
 		if (SHOP_ID > 0):
@@ -248,7 +248,7 @@ class shopee_connector(osv.osv):
 			access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
 
 			#SAVE NEW REFRESH TOKEN
-			self.write(cr, uid, ids, {
+			self.write(cr, uid, 1, {
 				'access_token' : access_token,
 				'refresh_token': new_refresh_token,
 				}, context=None)
@@ -279,7 +279,7 @@ class shopee_connector(osv.osv):
 		path = "/api/v2/product/update_price"
 		
 		#GET REFRESH TOKEN
-		shopee = self.browse(cr,uid,ids)
+		shopee = self.browse(cr,uid,1)
 		refresh_token = shopee.refresh_token
 		SHOP_ID = self._getStoreID(cr,uid)
 		
@@ -288,7 +288,7 @@ class shopee_connector(osv.osv):
 			access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
 
 			#SAVE NEW REFRESH TOKEN
-			self.write(cr, uid, ids, {
+			self.write(cr, uid, 1, {
 				'access_token' : access_token,
 				'refresh_token': new_refresh_token,
 				}, context=None)
