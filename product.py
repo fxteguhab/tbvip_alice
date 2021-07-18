@@ -289,12 +289,16 @@ class product_template(osv.osv):
 
 		'stock_qty_ideal': fields.float("Ideal Stock"),	
 		'stock_qty_verified': fields.boolean('Verified Stock'),
+
+		#MARKETPLACE variable
 		'sku' :fields.char('SKU'),
-		'toped_price_update': fields.boolean('Price Update', required=True),
-		'toped_stock_update': fields.boolean('Stock Update', required=True),
-		'toped_price_type' : fields.many2one('price.type', 'Price Type', required=True),
+		'toped_price_update': fields.boolean('Marketplace Price Update', required=True),
+		'toped_stock_update': fields.boolean('Marketplace Stock Update', required=True),
+		'toped_price_type' : fields.many2one('price.type', 'Marketplace Price Type', required=True),
 		'toped_delta_price' : fields.char('Delta Price'),
 		'toped_delta_stock' : fields.char('Delta Stock'),
+
+		#valuation variable
 		'total_qty' : fields.function(_product_total_stock, string="Total Qty", type='float', store=False),
 		'valuation' : fields.float('Valuation'),
 	}

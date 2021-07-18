@@ -343,11 +343,14 @@ class account_invoice(osv.osv):
 
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		
-		#Edit product stock di TOPED
+		#Edit product stock di TOPED & SHOPEE
 		if (invoice_type == 'in_invoice'): #buy
 			product_template = self.pool('product.template').browse(cr,uid,product_tmpl_id)
 			if (product_template.toped_stock_update):
 				toped = self.pool.get('tokopedia.connector')
 				toped.stock_update(cr,uid,product_template.sku,qty_available)
+
+				shopee = self.pool.get('shopee.connector')
+				shopee.stock_update(cr,uid,product_template.sku,qty_available)
 		return result
 		############################################################################################################################

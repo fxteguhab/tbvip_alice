@@ -104,7 +104,7 @@ class product_current_price(osv.osv):
 					}
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 		
-		#update price di TOPED
+		#update price di TOPED & SHOPEE
 		prices = self.browse(cr, uid, new_id, context=context)
 		product_id = prices.product_id
 		tipe = prices.price_type_id
@@ -112,7 +112,10 @@ class product_current_price(osv.osv):
 			#if ((tipe.type == 'sell') and (tipe.is_default)):
 			toped = self.pool.get('tokopedia.connector')
 			toped.price_update(cr,uid,product_id.product_tmpl_id.sku,prices.nett_1)
-	
+
+			shopee = self.pool.get('shopee.connector')
+			shopee.price_update(cr,uid,product_id.product_tmpl_id.sku,prices.nett_1)
+
 		return new_id
 
 		

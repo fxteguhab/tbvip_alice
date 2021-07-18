@@ -24,7 +24,7 @@ class tokopedia_connector(osv.osv):
 	def _getStoreID(self,cr,uid):
 		param_obj = self.pool.get('ir.config_parameter')
 		param_ids = param_obj.search(cr, uid, [('key','in',['TOKOPEDIA_STORE_ID'])])
-		notification_topic = ''
+		
 		for param_data in param_obj.browse(cr, uid, param_ids):
 			if param_data.key == 'TOKOPEDIA_STORE_ID':
 				return str(param_data.value)

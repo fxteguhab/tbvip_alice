@@ -62,8 +62,12 @@ class stock_inventory(osv.osv):
 					}
 				self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
-			#update product stock on TOPED
+			#update product stock on TOPED & SHOPEE
 			if (line.product_id.product_tmpl_id.toped_stock_update):
 				toped = self.pool.get('tokopedia.connector')
 				toped.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,line.product_qty)
+				
+				shopee = self.pool.get('shopee.connector')
+				shopee.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,line.product_qty)
+
 		return result
