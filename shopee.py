@@ -245,7 +245,7 @@ class shopee_connector(osv.osv):
 		SHOP_ID = self._getStoreID(cr,uid)
 		if (SHOP_ID > 0):
 			#GENERATE NEW TOKEN
-			access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
+			access_token, new_refresh_token = self.get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
 
 			#SAVE NEW REFRESH TOKEN
 			self.write(cr, uid, 1, {
@@ -285,7 +285,7 @@ class shopee_connector(osv.osv):
 		
 		if (SHOP_ID > 0):
 			#GENERATE NEW TOKEN
-			access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
+			access_token, new_refresh_token = self.get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
 
 			#SAVE NEW REFRESH TOKEN
 			self.write(cr, uid, 1, {
