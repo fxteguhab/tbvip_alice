@@ -20,11 +20,11 @@ PARTNER_ID = 2001507
 PARTNER_KEY = "27bc6c1f2bc3c736db69106dd04c2e5e9db443f4a55367b7c59084f0a653a8cc"
 
 #expirated token
-CODE = "3ed5ae69dcfa326b9630d7bb92ed26c7"
-access_token ="be142fa009e8c1c56f66cc9b072aeefb"
-refresh_token = "63ed51076c984cb1a5079138420889fc"
+CODE = "accfb0dceb4b13f4158d94157dd7c86b"
+access_token ="4e460686106c2b3f59db781089e53060"
+refresh_token = "52eff83f918806ce2b734fee8d9d7a81"
 
-#https://www.tokobesivip.com/?code=3ed5ae69dcfa326b9630d7bb92ed26c7&shop_id=219482557
+#https://www.tokobesivip.com/?code=accfb0dceb4b13f4158d94157dd7c86b&shop_id=219482557
 
 
 class shopee_connector(osv.osv):
@@ -106,7 +106,7 @@ class shopee_connector(osv.osv):
 		access_token = ret.get("access_token")
 		new_refresh_token = ret.get("refresh_token")
 		_logger.info('access_token : %s',str(access_token))
-		_logger.info('refresh_token : %s',str(refresh_token))
+		_logger.info('refresh_token : %s',str(new_refresh_token))
 		#print "access_token :" +str(access_token)
 		#print "refresh_token:" +str(new_refresh_token)
 		return access_token, new_refresh_token
@@ -170,7 +170,9 @@ class shopee_connector(osv.osv):
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
 		if ('response' in response):	
 			#if (response['response']['item_list'][0]['item_sku']):
-			return response["response"]["item_list"][0]["item_sku"]
+			item_sku = response.get("item_sku")
+			#return response["response"]["item_list"][0]["item_sku"]
+			return item_sku
 		else: return 0
 
 	def get_product_list(shop_id, partner_id, partner_key, access_token):		
@@ -227,11 +229,11 @@ class shopee_connector(osv.osv):
 
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
 		if ('response' in response):
-			item_count = response["response"]["total_count"]
-			for i in range(item_count):
-				if (response["response"]):
-				#if (response['response']['item'][i]['item_id']):
-					item_id = response["response"]["item"][i]["item_id"]
+			#item_count = response["response"]["total_count"]
+			item_count = response.get("total_count")
+			for i in range(item_count):			
+					#item_id = response["response"]["item"][i]["item_id"]
+					item_id = response.get("item_id")
 					item_sku = self.get_product_sku(shop_id, partner_id, partner_key, access_token,item_id)
 					if ((item_sku > 0) and (item_sku == sku)): 
 						result_item_id = item_id
@@ -319,8 +321,8 @@ class shopee_connector(osv.osv):
 
 	def shopee_1st_call(self, cr, uid, context={}):
 		self.create(cr, uid, {
-						'access_token': '',
-						'refresh_token':'63ed51076c984cb1a5079138420889fc' ,
+						'access_token': access_token,
+						'refresh_token': refresh_token,
 					})
 
 	#STANDAR MODEL SHOPPE STYLE NOT ODOO RELATED
