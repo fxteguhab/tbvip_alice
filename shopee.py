@@ -265,7 +265,7 @@ class shopee_connector(osv.osv):
 						'stock_list' :[
 						{
 						'model_id' : 0,
-						'normal_stock' : new_stock
+						'normal_stock' : int(new_stock),
 						}]
 						}
 				
@@ -306,7 +306,7 @@ class shopee_connector(osv.osv):
 						'price_list' :[
 						{
 						'model_id' : 0,
-						'original_price' : new_price
+						'original_price' : new_price,
 						}]
 						}
 				
