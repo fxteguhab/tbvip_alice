@@ -270,7 +270,7 @@ class shopee_connector(osv.osv):
 					}
 			
 			target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
-			response = _call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
+			response = self._call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
 			
 			if (response):
 				return response
@@ -310,7 +310,7 @@ class shopee_connector(osv.osv):
 					}
 			
 			target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
-			response = _call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
+			response = self._call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
 			
 			if (response):
 				return response
