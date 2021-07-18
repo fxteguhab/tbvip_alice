@@ -7,10 +7,9 @@ import requests
 import hmac
 import time
 import hashlib
+import logging
 
-#import logging
-
-#_logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 HOST_URL = "https://partner.shopeemobile.com"
 USER_AGENT = "Alice_python/1.0"
@@ -51,7 +50,7 @@ class shopee_connector(osv.osv):
 			else:
 				return '0'
 
-	def _call_api(host, endpoint, params=None, return_response=False, method="GET", access_token='', credentials=''):
+	def _call_api(self,host, endpoint, params=None, return_response=False, method="GET", access_token='', credentials=''):
 		url = "{0}{1}".format(host, endpoint)
 
 		headers = {}
@@ -91,7 +90,7 @@ class shopee_connector(osv.osv):
 		print "refresh_token:" +str(new_refresh_token)
 		return access_token, new_refresh_token
 
-	def get_access_token_shop_level(shop_id, partner_id, partner_key, refresh_token):
+	def get_access_token_shop_level(self,shop_id, partner_id, partner_key, refresh_token):
 		timest = int(time.time())
 		path = "/api/v2/auth/access_token/get"
 		body = {"shop_id":shop_id, "partner_id": partner_id,"refresh_token": refresh_token}
@@ -105,8 +104,10 @@ class shopee_connector(osv.osv):
 		
 		access_token = ret.get("access_token")
 		new_refresh_token = ret.get("refresh_token")
-		print "access_token :" +str(access_token)
-		print "refresh_token:" +str(new_refresh_token)
+		_logger.info('access_token : %s',str(access_token))
+		_logger.info('refresh_token : %s',str(refresh_token))
+		#print "access_token :" +str(access_token)
+		#print "refresh_token:" +str(new_refresh_token)
 		return access_token, new_refresh_token
 
 	def get_shop_info(shop_id, partner_id, partner_key, access_token):		
@@ -149,7 +150,7 @@ class shopee_connector(osv.osv):
 			print "PRODUCT INFO :"+ str(response['response']['item_list'][0]) + '\n'
 			return response
 
-	def get_product_sku(shop_id, partner_id, partner_key, access_token, item_id):		
+	def get_product_sku(self,shop_id, partner_id, partner_key, access_token, item_id):		
 		timest = int(time.time())
 		path = "/api/v2/product/get_item_base_info"
 		base_string = "%s%s%s%s%s"%(partner_id, path, timest, access_token, shop_id) 
@@ -203,7 +204,7 @@ class shopee_connector(osv.osv):
 				else : print "ERROR, NO SKU"
 		'''
 
-	def search_product_id_by_sku(shop_id, partner_id, partner_key, access_token, sku):		
+	def search_product_id_by_sku(self,shop_id, partner_id, partner_key, access_token, sku):		
 		timest = int(time.time())
 		path = "/api/v2/product/get_item_list"
 		base_string = "%s%s%s%s%s"%(partner_id, path, timest, access_token, shop_id) 
@@ -223,13 +224,13 @@ class shopee_connector(osv.osv):
 		'item_status':'NORMAL',
 		}
 
-		response = _call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
+		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
 		item_count = response['response']['total_count']
 		for i in range(item_count):
 			if (response['response']):
 			#if (response['response']['item'][i]['item_id']):
 				item_id = response['response']['item'][i]['item_id']
-				item_sku = get_product_sku(shop_id, partner_id, partner_key, access_token,item_id)
+				item_sku = self.get_product_sku(shop_id, partner_id, partner_key, access_token,item_id)
 				if ((item_sku > 0) and (item_sku == sku)): 
 					result_item_id = item_id
 					return result_item_id
@@ -256,7 +257,7 @@ class shopee_connector(osv.osv):
 			#GENERATE SIGN
 			base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
 			sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
-			item_id = search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
+			item_id = self.search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
 			response = None
 			data = {'item_id': item_id,
 					'stock_list' :[
@@ -296,7 +297,7 @@ class shopee_connector(osv.osv):
 			#GENERATE SIGN
 			base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
 			sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
-			item_id = search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
+			item_id = self.search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
 			response = None
 			data = {'item_id': item_id,
 					'price_list' :[
