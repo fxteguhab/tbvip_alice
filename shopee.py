@@ -243,36 +243,36 @@ class shopee_connector(osv.osv):
 		shopee = self.browse(cr,uid,ids)
 		refresh_token = shopee.refresh_token
 		SHOP_ID = self._getStoreID(cr,uid)
+		if (SHOP_ID > 0):
+			#GENERATE NEW TOKEN
+			access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
 
-		#GENERATE NEW TOKEN
-		access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
-
-		#SAVE NEW REFRESH TOKEN
-		self.write(cr, uid, ids, {
-			'access_token' : access_token,
-			'refresh_token': new_refresh_token,
-			}, context=None)
-	
-		#GENERATE SIGN
-		base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
-		sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
-		item_id = search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
-		response = None
-		data = {'item_id': item_id,
-				'stock_list' :[
-				{
-				'model_id' : 0,
-				'normal_stock' : new_stock
-				}]
-				}
+			#SAVE NEW REFRESH TOKEN
+			self.write(cr, uid, ids, {
+				'access_token' : access_token,
+				'refresh_token': new_refresh_token,
+				}, context=None)
 		
-		target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
-		response = _call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
-		
-		if (response):
-			return response
-		else:
-			return 0
+			#GENERATE SIGN
+			base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
+			sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
+			item_id = search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
+			response = None
+			data = {'item_id': item_id,
+					'stock_list' :[
+					{
+					'model_id' : 0,
+					'normal_stock' : new_stock
+					}]
+					}
+			
+			target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
+			response = _call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
+			
+			if (response):
+				return response
+			else:
+				return 0
 
 	def price_update(self, cr, uid,product_sku, new_price):		
 		timest = int(time.time())
@@ -283,35 +283,36 @@ class shopee_connector(osv.osv):
 		refresh_token = shopee.refresh_token
 		SHOP_ID = self._getStoreID(cr,uid)
 		
-		#GENERATE NEW TOKEN
-		access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
+		if (SHOP_ID > 0):
+			#GENERATE NEW TOKEN
+			access_token, new_refresh_token = get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
 
-		#SAVE NEW REFRESH TOKEN
-		self.write(cr, uid, ids, {
-			'access_token' : access_token,
-			'refresh_token': new_refresh_token,
-			}, context=None)
+			#SAVE NEW REFRESH TOKEN
+			self.write(cr, uid, ids, {
+				'access_token' : access_token,
+				'refresh_token': new_refresh_token,
+				}, context=None)
 
-		#GENERATE SIGN
-		base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
-		sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
-		item_id = search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
-		response = None
-		data = {'item_id': item_id,
-				'price_list' :[
-				{
-				'model_id' : 0,
-				'original_price' : new_price
-				}]
-				}
-		
-		target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
-		response = _call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
-		
-		if (response):
-			return response
-		else:
-			return 0
+			#GENERATE SIGN
+			base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
+			sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
+			item_id = search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
+			response = None
+			data = {'item_id': item_id,
+					'price_list' :[
+					{
+					'model_id' : 0,
+					'original_price' : new_price
+					}]
+					}
+			
+			target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
+			response = _call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
+			
+			if (response):
+				return response
+			else:
+				return 0
 
 	def shopee_1st_call(self, cr, uid, context={}):
 		self.create(cr, uid, {

@@ -86,18 +86,19 @@ class tokopedia_connector(osv.osv):
 				'new_stock' : new_stock
 				}]
 		STORE_ID = self._getStoreID(cr,uid)
-		#print "token:"+str(token)
-		#print"store_id:"+STORE_ID+"this"
-		#print"product_sku:"+str(product_sku)+"this"
-		#print"new_stock:"+str(new_stock)+"this"
-		response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/stock/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
-		#print "response:"+str(response)
-		#_logger.info('SKU : %s',str(product_sku))
-		#_logger.info('response : %s',str(response))
-		if response["data"]:
-			return response["data"]["succeed_rows"]
-		else:
-			return 0
+		if (STORE_ID > 0):
+			#print "token:"+str(token)
+			#print"store_id:"+STORE_ID+"this"
+			#print"product_sku:"+str(product_sku)+"this"
+			#print"new_stock:"+str(new_stock)+"this"
+			response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/stock/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
+			#print "response:"+str(response)
+			#_logger.info('SKU : %s',str(product_sku))
+			#_logger.info('response : %s',str(response))
+			if response["data"]:
+				return response["data"]["succeed_rows"]
+			else:
+				return 0
 
 	def price_update(self, cr, uid, product_sku, new_price):		
 		# coba login ke sistem TOPED	
@@ -108,11 +109,12 @@ class tokopedia_connector(osv.osv):
 				'new_price' : int(new_price)
 				}]
 		STORE_ID = self._getStoreID(cr,uid)
-		response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/price/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
-		if response["data"]:
-			return response["data"]["succeed_rows"]
-		else:
-			return 0
+		if (STORE_ID > 0):
+			response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/price/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
+			if response["data"]:
+				return response["data"]["succeed_rows"]
+			else:
+				return 0
 
 	def stock_update_delta(self, cr, uid, product_sku, delta, action):		
 		# coba login ke sistem TOPED	
