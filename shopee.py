@@ -225,15 +225,16 @@ class shopee_connector(osv.osv):
 		}
 
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
-		item_count = response['response']['total_count']
-		for i in range(item_count):
-			if (response['response']):
-			#if (response['response']['item'][i]['item_id']):
-				item_id = response['response']['item'][i]['item_id']
-				item_sku = self.get_product_sku(shop_id, partner_id, partner_key, access_token,item_id)
-				if ((item_sku > 0) and (item_sku == sku)): 
-					result_item_id = item_id
-					return result_item_id
+		if (response['response']):
+			item_count = response['response']['total_count']
+			for i in range(item_count):
+				if (response['response']):
+				#if (response['response']['item'][i]['item_id']):
+					item_id = response['response']['item'][i]['item_id']
+					item_sku = self.get_product_sku(shop_id, partner_id, partner_key, access_token,item_id)
+					if ((item_sku > 0) and (item_sku == sku)): 
+						result_item_id = item_id
+						return result_item_id
 					
 
 	def stock_update(self, cr, uid,product_sku, new_stock):		
