@@ -7,9 +7,9 @@ import requests
 import hmac
 import time
 import hashlib
-#import logging
+import logging
 
-#_logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 HOST_URL = "https://partner.shopeemobile.com"
 USER_AGENT = "Alice_python/1.0"
@@ -69,7 +69,7 @@ class shopee_connector(osv.osv):
 			response = requests.get(url, params=params, headers=headers)
 
 		json_response = response.json()
-		#_logger.info('json_response : %s',str(json_response))
+		_logger.info('json_response : %s',str(json_response))
 		return json_response
 
 

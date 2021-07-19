@@ -84,11 +84,11 @@ class sale_order(osv.osv):
 
 			#update product stock on TOPED
 			if (line.product_id.product_tmpl_id.toped_stock_update):
-				toped = self.pool.get('tokopedia.connector')
-				toped.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,qty_available)
+				#toped = self.pool.get('tokopedia.connector')
+				#toped.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,qty_available)
 
-				#shopee = self.pool.get('shopee.connector')
-				#shopee.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,qty_available)
+				shopee = self.pool.get('shopee.connector')
+				shopee.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,qty_available)
 
 
 			product_name += product_watch + '('+str("{:,.0f}".format(margin))+')'
