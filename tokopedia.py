@@ -45,7 +45,7 @@ class tokopedia_connector(osv.osv):
 
 		headers = {}
 		response = None
-
+		_logger.info('url : %s',str(url))
 		if (access_token != ''):
 			headers['Authorization'] = 'Bearer ' + access_token 
 			headers['Content-Type'] = 'application/json'
@@ -54,12 +54,14 @@ class tokopedia_connector(osv.osv):
 			headers['Content-Length'] = '0'
 			headers['user-agent'] = USER_AGENT
 
+		_logger.info('headers : %s',str(headers))
 		if (method == 'POST'):
 			response = requests.post(url, data=params, headers=headers)
 		else:
 			response = requests.get(url, params=params, headers=headers)
 
 		#print"url:"+response.url
+		_logger.info('response url : %s',str(response.url))
 		json_response = response.json()
 		_logger.info('response : %s',str(response))
 		_logger.info('json_response : %s',str(json_response))
@@ -93,6 +95,7 @@ class tokopedia_connector(osv.osv):
 			#print"store_id:"+STORE_ID+"this"
 			#print"product_sku:"+str(product_sku)+"this"
 			#print"new_stock:"+str(new_stock)+"this"
+			_logger.info('store ID to update stock : %s',str(STORE_ID))
 			response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/stock/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
 			#print "response:"+str(response)
 			#_logger.info('SKU : %s',str(product_sku))
