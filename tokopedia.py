@@ -29,7 +29,7 @@ class tokopedia_connector(osv.osv):
 			if param_data.key == 'TOKOPEDIA_STORE_ID':
 				return str(param_data.value)
 			else:
-				return '0'
+				return False
 
 	def _call_api(self,host, endpoint, params=None, return_response=False, method="GET", access_token='', credentials=''):
 		"""
@@ -86,7 +86,7 @@ class tokopedia_connector(osv.osv):
 				'new_stock' : new_stock
 				}]
 		STORE_ID = self._getStoreID(cr,uid)
-		if (STORE_ID > 0):
+		if (STORE_ID):
 			#print "token:"+str(token)
 			#print"store_id:"+STORE_ID+"this"
 			#print"product_sku:"+str(product_sku)+"this"
@@ -109,7 +109,7 @@ class tokopedia_connector(osv.osv):
 				'new_price' : int(new_price)
 				}]
 		STORE_ID = self._getStoreID(cr,uid)
-		if (STORE_ID > 0):
+		if (STORE_ID):
 			response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/price/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
 			if response["data"]:
 				return response["data"]["succeed_rows"]
