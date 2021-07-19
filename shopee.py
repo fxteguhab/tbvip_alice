@@ -21,8 +21,8 @@ PARTNER_KEY = "27bc6c1f2bc3c736db69106dd04c2e5e9db443f4a55367b7c59084f0a653a8cc"
 
 #expirated token
 CODE = "7c015c0965ca73ae90fb02c100afd6cf"
-access_token = "38d72cfa162e9ad49c4e20022b092465"
-refresh_token = "612fad138ee7f48afcbf89bfb3560c2a"
+access_token = "4e6f4886317f38085b254b3784d085d9"
+refresh_token = "d13ee07d972fd017eae7627722b5f94b"
 fmt = '%Y-%m-%d %H:%M:%S'
 
 #https://www.tokobesivip.com/?code=7c015c0965ca73ae90fb02c100afd6cf&shop_id=219482557
@@ -224,10 +224,15 @@ class shopee_connector(osv.osv):
 		'page_size':10,
 		'item_status':'NORMAL',
 		}
-
+		item_count = 0
 		response = self._call_api(HOST_URL,path, params=data, method="GET",access_token=access_token)
 		if ('response' in response):
-			item_count = response["response"]["total_count"]
+			
+			if (response["response"]["total_count"]):
+				item_count = response["response"]["total_count"]
+			else : item_count = 0
+
+			_logger.info('item_count : %s',str(item_count))
 			if (item_count > 0):
 				for i in range(item_count):			
 						item_id = response["response"]["item"][i]["item_id"]
