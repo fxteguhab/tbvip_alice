@@ -45,7 +45,7 @@ class tokopedia_connector(osv.osv):
 
 		headers = {}
 		response = None
-		_logger.info('url : %s',str(url))
+		#_logger.info('url : %s',str(url))
 		if (access_token != ''):
 			headers['Authorization'] = 'Bearer ' + access_token 
 			headers['Content-Type'] = 'application/json'
@@ -54,86 +54,99 @@ class tokopedia_connector(osv.osv):
 			headers['Content-Length'] = '0'
 			headers['user-agent'] = USER_AGENT
 
-		_logger.info('headers : %s',str(headers))
+		#_logger.info('headers : %s',str(headers))
 		if (method == 'POST'):
-			response = requests.post(url, data=params, headers=headers)
+			try:
+				response = requests.post(url, data=params, headers=headers, timeout = 10)
+			except requests.exceptions.Timeout as err: 
+				_logger.info('err: %s',str(err))
 		else:
-			response = requests.get(url, params=params, headers=headers)
+			try:
+				response = requests.get(url, params=params, headers=headers, timeout = 10)
+			except requests.exceptions.Timeout as err: 
+				#print(err)
+				_logger.info('err: %s',str(err))
 
-		#print"url:"+response.url
-		_logger.info('response url : %s',str(response.url))
-		json_response = response.json()
-		_logger.info('response : %s',str(response))
-		_logger.info('json_response : %s',str(json_response))
-		return json_response
-
+		if (response):
+			#print"url:"+response.url
+			#_logger.info('response url : %s',str(response.url))
+			json_response = response.json()
+			#_logger.info('response : %s',str(response))
+			#_logger.info('json_response : %s',str(json_response))
+			return json_response
+		else:
+			return None
 
 	def auth(self):		
 		# coba login ke sistem TOPED	
 		response = None
 		data = {'grant_type': "client_credentials"}
 		response = self._call_api(ACCOUNT_URL,'token', params=data, method="POST",credentials=CRED)
-		if response["access_token"]:
-			access_token = response["access_token"]
-			return response["access_token"]
-		else:
-			return null
+		if (response):
+			if (response["access_token"]):
+				access_token = response["access_token"]
+				return response["access_token"]
+			else : return None
+		else: return None
 
 	def stock_update(self, cr, uid,product_sku, new_stock):		
 		# coba login ke sistem TOPED	
 		token = self.auth()
-		response = None
-		new_stock = int(new_stock)
-		if (new_stock < 0) :new_stock = 0
-		data = [{
-				'sku' : str(product_sku),
-				'new_stock' : new_stock
-				}]
-		STORE_ID = self._getStoreID(cr,uid)
-		if (STORE_ID != '0'):
-			#print "token:"+str(token)
-			#print"store_id:"+STORE_ID+"this"
-			#print"product_sku:"+str(product_sku)+"this"
-			#print"new_stock:"+str(new_stock)+"this"
-			_logger.info('store ID to update stock : %s',str(STORE_ID))
-			response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/stock/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
-			#print "response:"+str(response)
-			#_logger.info('SKU : %s',str(product_sku))
-			#_logger.info('response : %s',str(response))
-			if response["data"]:
-				return response["data"]["succeed_rows"]
-			else:
-				return 0
+		if (token):
+			response = None
+			new_stock = int(new_stock)
+			if (new_stock < 0) :new_stock = 0
+			data = [{
+					'sku' : str(product_sku),
+					'new_stock' : new_stock
+					}]
+			STORE_ID = self._getStoreID(cr,uid)
+			if (STORE_ID != '0'):
+				#print "token:"+str(token)
+				#print"store_id:"+STORE_ID+"this"
+				#print"product_sku:"+str(product_sku)+"this"
+				#print"new_stock:"+str(new_stock)+"this"
+				#_logger.info('store ID to update stock : %s',str(STORE_ID))
+				response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/stock/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
+				#print "response:"+str(response)
+				#_logger.info('SKU : %s',str(product_sku))
+				#_logger.info('response : %s',str(response))
+				if response["data"]:
+					return response["data"]["succeed_rows"]
+				else:
+					return 0
 
 	def price_update(self, cr, uid, product_sku, new_price):		
 		# coba login ke sistem TOPED	
 		token = self.auth()
-		response = None
-		data = [{
-				'sku' : str(product_sku),
-				'new_price' : int(new_price)
-				}]
-		STORE_ID = self._getStoreID(cr,uid)
-		if (STORE_ID != '0'):
-			response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/price/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
-			if response["data"]:
-				return response["data"]["succeed_rows"]
-			else:
-				return 0
+		if (token):
+			response = None
+			data = [{
+					'sku' : str(product_sku),
+					'new_price' : int(new_price)
+					}]
+			STORE_ID = self._getStoreID(cr,uid)
+			if (STORE_ID != '0'):
+				response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/price/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
+				if response["data"]:
+					return response["data"]["succeed_rows"]
+				else:
+					return 0
 
 	def stock_update_delta(self, cr, uid, product_sku, delta, action):		
 		# coba login ke sistem TOPED	
 		token = self.auth()
-		response = None
-		data = [{
-				'sku' : str(product_sku),
-				'stock_value' : int(delta)
-				}]
-		
-		if (action == 'INC'):
-			response = self._call_api(PRODUCT_STOCK_URL2,APP_ID+'/stock/increment?shop_id='+self._getStoreID(cr,uid), params=json.dumps(data), method="POST",access_token=token)
-		elif (action == 'DEC'):
-			response = self._call_api(PRODUCT_STOCK_URL2,APP_ID+'/stock/decrement?shop_id='+self._getStoreID(cr,uid), params=json.dumps(data), method="POST",access_token=token)	
+		if (token):
+			response = None
+			data = [{
+					'sku' : str(product_sku),
+					'stock_value' : int(delta)
+					}]
+			
+			if (action == 'INC'):
+				response = self._call_api(PRODUCT_STOCK_URL2,APP_ID+'/stock/increment?shop_id='+self._getStoreID(cr,uid), params=json.dumps(data), method="POST",access_token=token)
+			elif (action == 'DEC'):
+				response = self._call_api(PRODUCT_STOCK_URL2,APP_ID+'/stock/decrement?shop_id='+self._getStoreID(cr,uid), params=json.dumps(data), method="POST",access_token=token)	
 
 	def get_product_list(self):		
 		#login ke sistem TOPED	

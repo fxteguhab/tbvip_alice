@@ -1,6 +1,6 @@
 
 from openerp.osv import osv, fields
-
+from datetime import datetime,timedelta
 import urllib
 import json
 import requests
@@ -20,11 +20,12 @@ PARTNER_ID = 2001507
 PARTNER_KEY = "27bc6c1f2bc3c736db69106dd04c2e5e9db443f4a55367b7c59084f0a653a8cc"
 
 #expirated token
-CODE = "accfb0dceb4b13f4158d94157dd7c86b"
-access_token ="10a4033e6c1c84b14840c18c9d2ec749"
-refresh_token = "f3d82405f3a3e27e61d507b27adadbb3"
+CODE = "7c015c0965ca73ae90fb02c100afd6cf"
+access_token = "38d72cfa162e9ad49c4e20022b092465"
+refresh_token = "612fad138ee7f48afcbf89bfb3560c2a"
+fmt = '%Y-%m-%d %H:%M:%S'
 
-#https://www.tokobesivip.com/?code=accfb0dceb4b13f4158d94157dd7c86b&shop_id=219482557
+#https://www.tokobesivip.com/?code=7c015c0965ca73ae90fb02c100afd6cf&shop_id=219482557
 
 
 class shopee_connector(osv.osv):
@@ -33,12 +34,9 @@ class shopee_connector(osv.osv):
 
 	_columns = {
 			'access_token': fields.char('access_token'),
+			'expire_in' : fields.datetime('expire time'),
 			'refresh_token': fields.char('refresh_token'),
 			}
-
-	_defaults = {
-		'refresh_token': "63ed51076c984cb1a5079138420889fc",
-		}
 
 	def _getStoreID(self,cr,uid):
 		param_obj = self.pool.get('ir.config_parameter')
@@ -69,7 +67,7 @@ class shopee_connector(osv.osv):
 			response = requests.get(url, params=params, headers=headers)
 
 		json_response = response.json()
-		_logger.info('json_response : %s',str(json_response))
+		#_logger.info('json_response : %s',str(json_response))
 		return json_response
 
 
@@ -105,11 +103,12 @@ class shopee_connector(osv.osv):
 		
 		access_token = ret.get("access_token")
 		new_refresh_token = ret.get("refresh_token")
-		#_logger.info('access_token : %s',str(access_token))
-		#_logger.info('refresh_token : %s',str(new_refresh_token))
+		expire_in = ret.get("expire_in")
+		_logger.info('access_token : %s',str(access_token))
+		_logger.info('refresh_token : %s',str(new_refresh_token))
 		#print "access_token :" +str(access_token)
 		#print "refresh_token:" +str(new_refresh_token)
-		return access_token, new_refresh_token
+		return access_token, new_refresh_token, expire_in
 
 	def get_shop_info(shop_id, partner_id, partner_key, access_token):		
 		timest = int(time.time())
@@ -244,26 +243,35 @@ class shopee_connector(osv.osv):
 	def stock_update(self, cr, uid,product_sku, new_stock):		
 		timest = int(time.time())
 		path = "/api/v2/product/update_stock"
-		
-		#GET REFRESH TOKEN
+		access_token = None
+		#GET ALL VAR
 		shopee = self.browse(cr,uid,1)
 		refresh_token = shopee.refresh_token
+		access_token = shopee.access_token
+		expire_time = datetime.strptime(shopee.expire_in, fmt)
 		SHOP_ID = self._getStoreID(cr,uid)
-		if (SHOP_ID > 0):
-			#GENERATE NEW TOKEN
-			access_token, new_refresh_token = self.get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
+		
+		if (new_stock < 0): new_stock = 0
 
-			if (access_token):
-				#SAVE NEW REFRESH TOKEN
-				self.write(cr, uid, 1, {
-					'access_token' : access_token,
-					'refresh_token': new_refresh_token,
-					}, context=None)
+		if (SHOP_ID > 0):
 			
-				#GENERATE SIGN
+			if (datetime.now() + timedelta(minutes = 30) >= expire_time): #GENERATE NEW TOKEN
+				access_token, new_refresh_token, expire_in = self.get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
+				#SAVE NEW REFRESH TOKEN
+				if ((access_token) and (new_refresh_token) and (expire_in)):
+					self.write(cr, uid, 1, {
+						'access_token' : access_token,
+						'refresh_token': new_refresh_token,
+						'expire_in' : datetime.now() + timedelta(seconds = int(expire_in))
+						}, context=None)
+				
+			if (access_token):
+			#GENERATE SIGN
 				base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
 				sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
 				item_id = self.search_product_id_by_sku(SHOP_ID, PARTNER_ID, PARTNER_KEY, access_token, product_sku)
+				
+				
 				if (item_id > 0):
 					response = None
 					data = {'item_id': item_id,
@@ -273,10 +281,10 @@ class shopee_connector(osv.osv):
 							'normal_stock' : int(new_stock),
 							}]
 							}
-					
+					#print"data for new stock :"+str(data)
 					target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
 					response = self._call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
-					
+					#_logger.info('response di stock update : %s',str(response))
 					if (response):
 						return response
 					else:
@@ -285,23 +293,29 @@ class shopee_connector(osv.osv):
 	def price_update(self, cr, uid,product_sku, new_price):		
 		timest = int(time.time())
 		path = "/api/v2/product/update_price"
-		
-		#GET REFRESH TOKEN
+		access_token = None
+		#GET ALL VAR
 		shopee = self.browse(cr,uid,1)
 		refresh_token = shopee.refresh_token
+		access_token = shopee.access_token
+		expire_time = datetime.strptime(shopee.expire_in, fmt)
 		SHOP_ID = self._getStoreID(cr,uid)
+
+		if (new_price < 0): new_price = 0
 		
 		if (SHOP_ID > 0):
-			#GENERATE NEW TOKEN
-			access_token, new_refresh_token = self.get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
+			
+			if (datetime.now() + timedelta(minutes = 30) >= expire_time): #GENERATE NEW TOKEN
+				access_token, new_refresh_token, expire_in = self.get_access_token_shop_level(SHOP_ID,PARTNER_ID,PARTNER_KEY,refresh_token)
+				#SAVE NEW REFRESH TOKEN
+				if ((access_token) and (new_refresh_token) and (expire_in)):
+					self.write(cr, uid, 1, {
+						'access_token' : access_token,
+						'refresh_token': new_refresh_token,
+						'expire_in' : datetime.now() + timedelta(seconds = int(expire_in))
+						}, context=None)
 
 			if (access_token):
-				#SAVE NEW REFRESH TOKEN
-				self.write(cr, uid, 1, {
-					'access_token' : access_token,
-					'refresh_token': new_refresh_token,
-					}, context=None)
-
 				#GENERATE SIGN
 				base_string = "%s%s%s%s%s"%(PARTNER_ID, path, timest, access_token, SHOP_ID) 
 				sign = hmac.new( PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
@@ -318,7 +332,7 @@ class shopee_connector(osv.osv):
 					
 					target = path+ "?partner_id=%s&timestamp=%s&access_token=%s&shop_id=%s&sign=%s"%(PARTNER_ID,timest,access_token,SHOP_ID,sign)
 					response = self._call_api(HOST_URL,target, params=json.dumps(data), method="POST",access_token=access_token)
-					
+					#_logger.info('response di price update : %s',str(response))
 					if (response):
 						return response
 					else:
@@ -328,6 +342,7 @@ class shopee_connector(osv.osv):
 		self.create(cr, uid, {
 						'access_token': access_token,
 						'refresh_token': refresh_token,
+						'expire_in' : datetime.now(),
 					})
 
 	#STANDAR MODEL SHOPPE STYLE NOT ODOO RELATED
