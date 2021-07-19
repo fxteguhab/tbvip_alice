@@ -61,6 +61,7 @@ class tokopedia_connector(osv.osv):
 
 		#print"url:"+response.url
 		json_response = response.json()
+		_logger.info('response : %s',str(response))
 		_logger.info('json_response : %s',str(json_response))
 		return json_response
 
