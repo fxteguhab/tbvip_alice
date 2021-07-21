@@ -112,8 +112,10 @@ class tokopedia_connector(osv.osv):
 				#_logger.info('SKU : %s',str(product_sku))
 				#_logger.info('response : %s',str(response))
 				if response["data"]:
+					_logger.info('tokopedia response : %s',str(response["data"]["succeed_rows"]))
 					return response["data"]["succeed_rows"]
 				else:
+					_logger.info('update stock @TOKOPEDIA failed for item_sku : %s',str(product_sku))
 					return 0
 
 	def price_update(self, cr, uid, product_sku, new_price):		
@@ -129,8 +131,10 @@ class tokopedia_connector(osv.osv):
 			if (STORE_ID != '0'):
 				response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/price/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
 				if response["data"]:
+					_logger.info('tokopedia response : %s',str(response["data"]["succeed_rows"]))
 					return response["data"]["succeed_rows"]
 				else:
+					 _logger.info('update price @TOKOPEDIA failed for item_sku : %s',str(product_sku))
 					return 0
 
 	def stock_update_delta(self, cr, uid, product_sku, delta, action):		
