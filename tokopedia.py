@@ -134,7 +134,7 @@ class tokopedia_connector(osv.osv):
 					_logger.info('tokopedia response : %s',str(response["data"]["succeed_rows"]))
 					return response["data"]["succeed_rows"]
 				else:
-					 _logger.info('update price @TOKOPEDIA failed for item_sku : %s',str(product_sku))
+					_logger.info('update price @TOKOPEDIA failed for item_sku : %s',str(product_sku))
 					return 0
 
 	def stock_update_delta(self, cr, uid, product_sku, delta, action):		
