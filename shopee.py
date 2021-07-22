@@ -56,6 +56,11 @@ class shopee_connector(osv.osv):
 		more = True
 		found = False
 
+		variation_id = 0
+		item_id = 0
+		variation_sku = ''
+		item_sku = ''
+
 		while True:
 			data = {
 			'partner_id' : PARTNER_ID,
@@ -83,13 +88,21 @@ class shopee_connector(osv.osv):
 					for i in range(iterate):		
 						item_sku = response["items"][i]["item_sku"]
 						item_id = response["items"][i]["item_id"]
+						variation_id = 0
+						variations = len(response["items"][i]["variations"])
 						if ((item_sku > 0) and (item_sku == sku)): 
-							result_item_id = item_id
-							return result_item_id
+							return item_id, variation_id #found item_id
+						elif (variations > 0):
+							for j in range(variations):
+								variation_sku = response["items"][i]["variations"][j]["variation_sku"]
+								variation_id = response["items"][i]["variations"][j]["variation_id"]
+								if ((variation_sku > 0) and (variation_sku == sku)): 
+									return item_id, variation_id #found variaton_id
+
 					if (next_offset + iterate == item_count): break	
 				else : break
 			else : break
-		return result_item_id
+		return 0, 0 #not found
 
 	def stock_update(self, cr, uid, item_sku, new_stock):		
 		timest = int(time.time())
@@ -97,17 +110,25 @@ class shopee_connector(osv.osv):
 
 		shop_id = self._getStoreID(cr,uid)
 		if (shop_id != 0):
-			item_id = self.search_product_id_by_sku(shop_id,item_sku)
+			item_id, variation_id = self.search_product_id_by_sku(shop_id,item_sku)
+			new_stock = int(new_stock)
+			if (new_stock < 0) :new_stock = 0
 			if (item_id > 0):
-				response = None
+				
 				data = {
 				'partner_id' : PARTNER_ID,
 				'timestamp' : timest,
 				'shopid' : shop_id,
 
 				'item_id' : item_id,
-				'stock': int(new_stock)
+				'stock': new_stock,
 				}
+
+				if (variation_id > 0):
+					path = "/api/v1/items/update_variation_stock"
+					data['variation_id'] = variation_id
+				else:
+					path = "/api/v1/items/update_stock"
 
 				base_string = HOST_URL+path + "|" + json.dumps(data)
 				sign = hmac.new(PARTNER_KEY, base_string, hashlib.sha256).hexdigest()
@@ -124,13 +145,12 @@ class shopee_connector(osv.osv):
 
 	def price_update(self, cr,uid, item_sku, new_price):		
 		timest = int(time.time())
-		path = "/api/v1/items/update_price"
-
 		shop_id = self._getStoreID(cr,uid)
 		if (shop_id != 0):
-			item_id = self.search_product_id_by_sku(shop_id, item_sku)
+			item_id, variation_id = self.search_product_id_by_sku(shop_id,item_sku)
+			#print "result item id : "+str(item_id)+" variation_id: "+str(variation_id)
 			if (item_id > 0):
-				response = None
+				
 				data = {
 				'partner_id' : PARTNER_ID,
 				'timestamp' : timest,
@@ -139,6 +159,12 @@ class shopee_connector(osv.osv):
 				'item_id' : item_id,
 				'price': float(new_price)
 				}
+
+				if (variation_id > 0):
+					path = "/api/v1/items/update_variation_price"
+					data['variation_id'] = variation_id
+				else:
+					path = "/api/v1/items/update_price"
 
 				base_string = HOST_URL+path + "|" + json.dumps(data)
 				sign = hmac.new(PARTNER_KEY, base_string, hashlib.sha256).hexdigest()

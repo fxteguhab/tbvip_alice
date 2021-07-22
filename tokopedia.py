@@ -90,18 +90,20 @@ class tokopedia_connector(osv.osv):
 		else: return None
 
 	def stock_update(self, cr, uid,product_sku, new_stock):		
-		# coba login ke sistem TOPED	
-		token = self.auth()
-		if (token):
-			response = None
-			new_stock = int(new_stock)
-			if (new_stock < 0) :new_stock = 0
-			data = [{
-					'sku' : str(product_sku),
-					'new_stock' : new_stock
-					}]
-			STORE_ID = self._getStoreID(cr,uid)
-			if (STORE_ID != '0'):
+		STORE_ID = self._getStoreID(cr,uid)
+		if (STORE_ID != '0'):
+			# coba login ke sistem TOPED	
+			token = self.auth()
+			if (token):
+				response = None
+				new_stock = int(new_stock)
+				if (new_stock < 0) :new_stock = 0
+				
+				data = [{
+						'sku' : str(product_sku),
+						'new_stock' : new_stock
+						}]
+				
 				#print "token:"+str(token)
 				#print"store_id:"+STORE_ID+"this"
 				#print"product_sku:"+str(product_sku)+"this"
@@ -119,17 +121,17 @@ class tokopedia_connector(osv.osv):
 					_logger.info('update stock @TOKOPEDIA failed for item_sku : %s',str(product_sku))
 					return 0
 
-	def price_update(self, cr, uid, product_sku, new_price):		
-		# coba login ke sistem TOPED	
-		token = self.auth()
-		if (token):
-			response = None
-			data = [{
-					'sku' : str(product_sku),
-					'new_price' : int(new_price)
-					}]
-			STORE_ID = self._getStoreID(cr,uid)
-			if (STORE_ID != '0'):
+	def price_update(self, cr, uid, product_sku, new_price):
+		STORE_ID = self._getStoreID(cr,uid)
+		if (STORE_ID != '0'):		
+			# coba login ke sistem TOPED	
+			token = self.auth()
+			if (token):
+				response = None
+				data = [{
+						'sku' : str(product_sku),
+						'new_price' : int(new_price)
+						}]
 				response = self._call_api(PRODUCT_STOCK_URL,APP_ID+'/price/update?shop_id='+STORE_ID, params=json.dumps(data), method="POST",access_token=token)
 				if response["data"]:
 					#_logger.info('tokopedia response : %s',str(response["data"]))
