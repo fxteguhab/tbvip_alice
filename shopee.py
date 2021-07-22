@@ -117,7 +117,8 @@ class shopee_connector(osv.osv):
 				}
 
 				response = requests.post(HOST_URL+path, json=data, headers=headers).json()
-				_logger.info('shopee response : %s',str(response))
+				#_logger.info('shopee response : %s',str(response))
+				_logger.info('update stock @SHOPEE success for item_sku : %s',str(item_sku))
 				return response
 			else: _logger.info('update stock @SHOPEE failed for item_sku : %s',str(item_sku))
 
@@ -147,6 +148,7 @@ class shopee_connector(osv.osv):
 				}
 
 				response = requests.post(HOST_URL+path, json=data, headers=headers).json()
-				_logger.info('shopee response : %s',str(response))
+				#_logger.info('shopee response : %s',str(response))
+				_logger.info('update price @SHOPEE success for item_sku : %s',str(item_sku))
 				return response
 			else: _logger.info('update price @SHOPEE failed for item_sku : %s',str(item_sku))
