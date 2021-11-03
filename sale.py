@@ -12,7 +12,7 @@ class sale_order(osv.osv):
 		#Get Param Value
 		param_obj = self.pool.get('ir.config_parameter')
 		param_ids = param_obj.search(cr, uid, [('key','in',['notification_sale_limit'])])
-		sale_limit = 0
+		sale_limit = -1
 		for param_data in param_obj.browse(cr, uid, param_ids):
 			if param_data.key == 'notification_sale_limit':
 				sale_limit = float(param_data.value)
@@ -90,13 +90,13 @@ class sale_order(osv.osv):
 				toped = self.pool.get('tokopedia.connector')
 				toped.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,qty_available)
 
-
+			
 			product_name += product_watch + '('+str("{:,.0f}".format(margin))+')'
 			if (extra_info != ''):
 				product_name += '\n' + extra_info
 			line_str += str(line.product_uos_qty)+':'+product_name + '\n'				
 
-		if ((value >= sale_limit) or (need_notif)):
+		if ( (sale_limit > 0) and ((value >= sale_limit) or (need_notif))):
 			if (value >= sale_limit): sale_watch += '[VALUE]'
 			alert = '!'
 			for alert_lv in range(int(value // sale_limit )):
