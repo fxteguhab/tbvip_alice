@@ -7,6 +7,7 @@ PRODUCT_SOUND_IDX = 1
 class sale_order(osv.osv):
 	_inherit = 'sale.order'
 
+	'''
 	def action_button_confirm(self, cr, uid, ids, context=None):
 		result = super(sale_order, self).action_button_confirm(cr, uid, ids, context)
 		#Get Param Value
@@ -39,6 +40,7 @@ class sale_order(osv.osv):
 			extra_info = ''
 			product_name = line.product_id.name_template
 			qty_available = line.product_id.qty_available
+			total_qty = line.product_id.total_qty
 
 			sell_price_unit = line.price_unit
 			sell_price_unit_nett = line.price_unit_nett
@@ -85,10 +87,10 @@ class sale_order(osv.osv):
 			#update product stock on TOPED
 			if (line.product_id.product_tmpl_id.toped_stock_update):
 				shopee = self.pool.get('shopee.connector')
-				shopee.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,qty_available)
+				shopee.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,total_qty)
 
 				toped = self.pool.get('tokopedia.connector')
-				toped.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,qty_available)
+				toped.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,total_qty)
 
 			
 			product_name += product_watch + '('+str("{:,.0f}".format(margin))+')'
@@ -118,3 +120,4 @@ class sale_order(osv.osv):
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
 		return result
+		'''
