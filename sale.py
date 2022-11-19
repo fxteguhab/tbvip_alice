@@ -7,7 +7,7 @@ PRODUCT_SOUND_IDX = 1
 class sale_order(osv.osv):
 	_inherit = 'sale.order'
 
-	'''
+	
 	def action_button_confirm(self, cr, uid, ids, context=None):
 		result = super(sale_order, self).action_button_confirm(cr, uid, ids, context)
 		#Get Param Value
@@ -83,7 +83,7 @@ class sale_order(osv.osv):
 				if '[LOSS]' not in sale_watch:
 					sale_watch += '[LOSS]'
 
-
+			'''
 			#update product stock on TOPED
 			if (line.product_id.product_tmpl_id.toped_stock_update):
 				shopee = self.pool.get('shopee.connector')
@@ -91,7 +91,7 @@ class sale_order(osv.osv):
 
 				toped = self.pool.get('tokopedia.connector')
 				toped.stock_update(cr,uid,line.product_id.product_tmpl_id.sku,total_qty)
-
+			'''
 			
 			product_name += product_watch + '('+str("{:,.0f}".format(margin))+')'
 			if (extra_info != ''):
@@ -120,4 +120,4 @@ class sale_order(osv.osv):
 			self.pool.get('tbvip.fcm_notif').send_notification(cr,uid,message_title,message_body,context=context)
 
 		return result
-		'''
+		
